@@ -103,6 +103,7 @@
 \end{enumerate}
 \newpage
 \section*{Notable Facts (NF)}
+% for determinism and erased list formulation, I think that might make more sense in definitions, but its being placed here due to page space contraints :/
 \begin{enumerate}
   \item \textbf{Determinism}: \\
         If a program $c$ is deterministic, thn it follows that:
@@ -121,30 +122,6 @@
         using the erasure function $\erase{\cdot}$: $p_1 \indistinctD p_2$ and $p_1 \leq_{\DD} p_2$ can be obtained as follows:
         \[p_1 \leq_{\DD} p_2 \iff \erase{p_1} \leq \erase{p_2}\]
         \[p_1 \indistinctD p_2 \iff \erase{p_1} = \erase{p_2}\]
-        %         All programs $c$ are assumed to be deterministic, having the property that for an arbitrary starting memory $m$:
-        %         \[
-        %           \forall t_1, t_2 \in \trace.\,\pprod{c}{m}{t_1} \wedge \pprod{c}{m}{t_2}
-        %           \implies t_1 \leq t_2 \vee t_2 \leq t_1
-        %         \]
-        %         (where if a program produces two traces for a given memory, at least one must be a prefix of the other)
-
-        %         Alternatively, this can be phrased as a program never having two possible
-        %         events at any point in time:
-        %         \[
-        %           \forall p \in \fintrace, m\in\Store, \alpha, \beta \in \EE.\, \pmprod{c}{m}{p\cdot\alpha} \wedge \pmprod{c}{m}{p\cdot\beta} \implies \alpha = \beta
-        %         \]
-        %     \item \textbf{D-Indistinguishabilities are Equivalence Relations} \\
-        %           Both $\indistinctD\,\in \Store \times \Store$ and $\indistinctD\,\in \fintrace \times \fintrace$ are equivalence relations, meaning:
-        %           \begin{enumerate}
-        %             \item $a \indistinctD a$
-        %             \item $a \indistinctD b \implies b \indistinctD a$
-        %             \item $a \indistinctD b \wedge b \indistinctD c \implies a \indistinctD c$
-        %           \end{enumerate}
-        %   \item \textbf{Production of Prefixes on Finite Traces} \\
-        %         If a program and memory produces a finite trace, it must necessarily produce all prefixes of that trace:
-        %         \[
-        %           \forall c, m \in \Store, p \in \fintrace.\, \pmprod{c}{m}{p} \implies \forall p' \leq p.\, \pmprod{c}{m}{p'}
-        %         \]
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%[Proof]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section*{PsNi Proofs (PS)}
@@ -379,6 +356,10 @@
         Given that for an arbitrary program $c$ where $c \in \kpini_{\DD}$,
         show that $\behav{c} \in \hpini_{\DD}$.
 
+        % Lemma for the on-the-board representation of PiNi's implication -- which I found needed determinism to generalize into this form.
+        % Otherwise, for each alpha1 after p1 produced by m1, there'd be only a guarantee that some particular p2 * alpha2 is indistinguishable 
+        %            from  p1 * alpha1.
+
         \textbf{Lemma 4.1:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$, $p_1, p_2 \in \fintrace$, $\alpha_1, \alpha_2 \in \EE$ where $\neg Sil_\DD(\alpha_1)$, $\neg Sil_\DD(\alpha_2)$, $m_1 \indistinctD m_2$, $p_1 \indistinctD p_2$, $\pmprod{c}{m_1}{p_1 \cdot \alpha_1}$ and $\pmprod{c}{m_2}{p_2 \cdot \alpha_2}$: it follows that
         \[
           \exists\, p \in \fintrace, \alpha \in \EE.\, \neg Sil_\DD(\alpha) \,\wedge\, \pmprod{c}{m_1}{p} \wedge\, p \indistinctD p_2\cdot\alpha \implies p_1\cdot\alpha_1 \indistinctD p_2\cdot\alpha_2
@@ -409,6 +390,8 @@
           \end{tcolorbox}
         \end{addmargin}
 
+        % lemma with the main helpful consequence
+
         \textbf{Lemma 4.2:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$ and $p_1, p_2 \in \fintrace$: if $m_1 \indistinctD m_2$, $\pmprod{c}{m_1}{p_1}$, and $\pmprod{c}{m_2}{p_2}$ then
         \[
           \len{\erase{p_1}} \leq \len{\erase{p_2}} \implies \erase{p_1} \leq \erase{p_2}
@@ -426,7 +409,7 @@
             \[
               \len{\erase{p'_1}} \leq \len{\erase{p_2}} \implies \erase{p'_1} \leq \erase{p_2}
             \]
-            
+
             Since $\len{\erase{p_1}} = n + 1$, it follows that there exists $p_{1\DD}, \alpha_1$ where $\neg Sil_\DD(\alpha_1) \wedge \erase{p_1} = p_{1\DD} \cdot \alpha_1$.
 
             Applying the inductive hypothesis shows that $p_{1\DD} \leq \erase{p_2}$. Combining this with the fact that $\len{p_{1\DD}} = n < \len{\erase{p_2}}$ implies that there exists $p_{2\DD}, \alpha_2$ where $p_{2\DD} \cdot \alpha_2 \leq \erase{p_2}$ and $p_{1\DD} = p_{2\DD}$.
@@ -439,6 +422,9 @@
             \end{align*}
           \end{addmargin}
         \end{addmargin}
+
+        % final steps from lemma to theorem
+
         The claim that $\behav{c} \in \hpini_\DD$ then follows. Let $(m_1, st_1), (m_2, st_2) \in \behav{c}$ be arbitrarily chosen trace productions s.t. $m_1 \leq m_2$. Then, arbitrarily pick $p_1, p_2 \in \fintrace$ s.t. $p_1 \leq st_1, p_2 \leq st_2$ and consider the comparison of $\len{\erase{p_1}}$ and $\len{\erase{p_2}}$.
 
         Without loss of generality, assume $\len{\erase{p_1}} \leq \len{\erase{p_2}}$. From lemma 4.2, it then follows that $\erase{p_1} \leq  \erase{p_2} \implies p_1 \leq_\DD p_2$ (from (NF.3)), as desired.
