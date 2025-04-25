@@ -4,7 +4,6 @@
 \usepackage[margin=0.65in,letterpaper]{geometry}
 \usepackage{newtx}
 \usepackage{titlesec}
-\usepackage{hyperref}
 \usepackage{tcolorbox}
 
 \let\Bbbk\relax % Apparently amssymb defines \Bbbk and so does newtxmath
@@ -23,14 +22,7 @@
 \makeatletter
 \makeatother
 %% Common macros that will get used all over the place
-\newcommand{\defiff}{\overset{\mbox{\raisebox{-2pt}[2pt][0pt]{$\scriptstyle\triangle$}}}{\iff}}
-\newcommand{\alt}{\mkern3mu\mid\mkern3mu}
-\newcommand{\pfun}{\rightharpoonup}
-\newcommand{\ty}{\mkern2mu{:}\mkern2mu}
-\newcommand{\proves}{\vdash}
-\newcommand{\nproves}{\nvdash}
-\newcommand{\entails}{\vDash}
-\newcommand{\nentails}{\nvDash}
+\newcommand{\defiff}{\overset{\mbox{\raisebox{-2pt}[2pt][0pt]{$\scriptstyle\triangle$}}}{\iff}} 
 \newcommand{\NN}{\mathbb{N}}
 \newcommand{\ZZ}{\mathbb{Z}}
 \newcommand{\EE}{\mathbb{E}}
@@ -40,7 +32,6 @@
 \newcommand{\kpsni}{\text{KPsNi}}
 \newcommand{\hpini}{\text{HPiNi}}
 \newcommand{\kpini}{\text{KPiNi}}
-\newcommand{\sil}{\text{sil}}
 \newcommand{\behav}[1]{\text{Behav}(#1)}
 \newcommand{\initmem}[1]{\text{in}({#1})}
 \newcommand{\indistinctD}{\indistinct{\DD}}
@@ -56,26 +47,13 @@
 \newcommand{\stepsto}{\longrightarrow}
 \newcommand{\stepsmany}{\longrightarrow^*}
 \newcommand{\Bigstep}{\mathbin{\Downarrow}}
-\newcommand{\PCA}[3]{\{#1\}\mathbin{#2}\{#3\}}
+\newcommand{\PCA}[3]{\{#1\}\mathbin{#2}\{#3\}} 
+\newcommand{\Store}{\mathbf{Store}}  
 
-%% Imp Syntax 
-\newcommand{\Var}{\mathbf{Var}}
-\newcommand{\Store}{\mathbf{Store}}
-\newcommand{\Cont}{\mathbf{Cont}}
-\newcommand{\two}{\varmathbb{2}}
-
-% Names
-\newcommand{\IfN}{\programfont{if}}
-\newcommand{\ThenN}{\programfont{then}}
-\newcommand{\ElseN}{\programfont{else}}
-\newcommand{\WhileN}{\programfont{while}}
-\newcommand{\DoN}{\programfont{do}}
-
-\title{ Equivalence of Progess Related Non-Interference Definitions }
+\title{ Equivalence of Progess Related Non-Interference Definitions } 
 \author{}
 \begin{document}
 \maketitle
-% \tableofcontents
 \section*{Definitions (D)}
 \begin{enumerate}[nosep]
   \item \textbf{Definitions of Notable Terms}: \begin{enumerate}
