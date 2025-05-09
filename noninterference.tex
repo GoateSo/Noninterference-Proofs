@@ -22,7 +22,7 @@
 \makeatletter
 \makeatother
 %% Common macros that will get used all over the place
-\newcommand{\defiff}{\overset{\mbox{\raisebox{-2pt}[2pt][0pt]{$\scriptstyle\triangle$}}}{\iff}} 
+\newcommand{\defiff}{\overset{\mbox{\raisebox{-2pt}[2pt][0pt]{$\scriptstyle\triangle$}}}{\iff}}
 \newcommand{\NN}{\mathbb{N}}
 \newcommand{\ZZ}{\mathbb{Z}}
 \newcommand{\EE}{\mathbb{E}}
@@ -32,25 +32,28 @@
 \newcommand{\kpsni}{\text{KPsNi}}
 \newcommand{\hpini}{\text{HPiNi}}
 \newcommand{\kpini}{\text{KPiNi}}
+\newcommand{\hlfp}{\text{HLfp}}
+\newcommand{\klfp}{\text{KLfp}}
 \newcommand{\behav}[1]{\text{Behav}(#1)}
 \newcommand{\initmem}[1]{\text{in}({#1})}
 \newcommand{\indistinctD}{\indistinct{\DD}}
 \newcommand{\trace}{\mathbb{T}}
 \newcommand{\fintrace}{\mathbb{T}_{\text{fin}}}
-\newcommand{\pprod}[3]{#1\leadsto(#2,#3)}
-\newcommand{\pmprod}[3]{\conf{#1}{#2}\rightarrow^{*}_{#3}}
+\newcommand{\tprod}[3]{#1\leadsto(#2,#3)}
+\newcommand{\ftprod}[3]{\conf{#1}{#2}\rightarrow^{*}_{#3}}
 \newcommand{\erase}[1]{\left\lfloor{#1}\right\rfloor_{\DD}}
 \newcommand{\len}[1]{\text{len}({#1})}
+\newcommand{\prog}[2]{\text{Prog}_{\DD}({#1},{#2})}
 % General language syntax
 \newcommand{\conf}[2]{\conf*{#1, #2}}
 \WithSuffix\newcommand\conf*[1]{\langle #1 \rangle}
 \newcommand{\stepsto}{\longrightarrow}
 \newcommand{\stepsmany}{\longrightarrow^*}
 \newcommand{\Bigstep}{\mathbin{\Downarrow}}
-\newcommand{\PCA}[3]{\{#1\}\mathbin{#2}\{#3\}} 
-\newcommand{\Store}{\mathbf{Store}}  
+\newcommand{\PCA}[3]{\{#1\}\mathbin{#2}\{#3\}}
+\newcommand{\Store}{\mathbf{Store}}
 
-\title{ Equivalence of Progess Related Non-Interference Definitions } 
+\title{ Equivalence of Progess Related Non-Interference Definitions }
 \author{}
 \begin{document}
 \maketitle
@@ -71,21 +74,21 @@
   \item \textbf{Definition of Program bevhavior}: \\
         For an arbitrary program $c$:
         \[ \behav{c} \subseteq \Store \times \mathbb{T} = \{(m, st) \in \Store \times
-          \mathbb{T}\,\vert\,\pprod{c}{m}{st} \} \]
+          \mathbb{T}\,\vert\,\tprod{c}{m}{st} \} \]
   \item \textbf{Definition of (Deterministic) Program Trace Production}: \\
         For a program $c$ and arbitrary store, trace pair $(m, st) \in \Store \times \mathbb{T}$:
-        \[\pprod{c}{m}{st} \defiff \forall p \in \fintrace.\,(p \leq st \Leftrightarrow \pmprod{c}{m}{p}) \]
+        \[\tprod{c}{m}{st} \defiff \forall p \in \fintrace.\,(p \leq st \Leftrightarrow \ftprod{c}{m}{p}) \]
   \item \textbf{Definition of Program, Memory Production of Finite Trace}: \\
         For an arbitrary program $c$, memory store $m \in \Store$, and finite trace $p
           \in \fintrace$
-        \[\pmprod{c}{m}{p} \defiff \exists c', m' \in \Store. \conf{c}{m} \rightarrow^{*}_{p} \conf{c'}{m'}\]
+        \[\ftprod{c}{m}{p} \defiff \exists c', m' \in \Store. \conf{c}{m} \rightarrow^{*}_{p} \conf{c'}{m'}\]
   \item \textbf{Definition of Attacker Knowledge}: \\
         For a program $c$, an initial memory $m \in \Store$, and finite trace $p \in
           \fintrace$
-        \[ k(c,m,p,\DD) = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace. (\pmprod{c}{m'}{p'} \,\wedge\,p \indistinctD p')\} \]
+        \[ k(c,m,p,\DD) = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace. (\ftprod{c}{m'}{p'} \,\wedge\,p \indistinctD p')\} \]
   \item \textbf{Knowledge definition of PsNi}: \\
         for an arbitrary program $c$:
-        \[ c\in\kpsni_{\DD} \defiff \forall p \in \fintrace, m \in \Store, \alpha \in \EE.\,\pmprod{c}{m}{p\cdot\alpha}\,\wedge\,\neg Sil_{\DD}(\alpha)\implies\,k(c, m, p, \DD) = k(c, m, p \cdot \alpha, \DD)\]
+        \[ c\in\kpsni_{\DD} \defiff \forall p \in \fintrace, m \in \Store, \alpha \in \EE.\,\ftprod{c}{m}{p\cdot\alpha}\,\wedge\,\neg Sil_{\DD}(\alpha)\implies\,k(c, m, p, \DD) = k(c, m, p \cdot \alpha, \DD)\]
   \item \textbf{Hyperproperty definition of PiNi}: \\
         For an arbitrary set of traces, initial memory store pairs $T \subseteq \Store
           \times \mathbb{T}$:
@@ -96,12 +99,21 @@
   \item \textbf{Definition of Progress Knowledge}: \\
         For a program $c$, an initial memory $m \in \Store$, and finite trace $p \in
           \fintrace$
-        \[ k_{\rightarrow}(c,m,p,\DD) = \{m' \,\vert\, m' \indistinctD m \, \wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\pmprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha')\wedge\,p \indistinctD p')\} \]
+        \[ k_{\rightarrow}(c,m,p,\DD) = \{m' \,\vert\, m' \indistinctD m \, \wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\ftprod{c}{m'}{p'} \wedge\, \neg Sil_{\DD}(\alpha')\wedge\,p' \indistinctD p\cdot\alpha')\} \]
   \item \textbf{Knowledge based definition of PiNi}: \\
         For an arbitrary program $c$:
-        \[ c\in\kpini_{\DD} \defiff \forall p \in \fintrace, m \in \Store, \alpha \in \EE.\,\pmprod{c}{m}{p\cdot\alpha}\,\wedge\,\neg Sil_{\DD}(\alpha)\implies\,k_{\rightarrow}(c, m, p, \DD) = k(c, m, p \cdot \alpha, \DD)\]
+        \[ c\in\kpini_{\DD} \defiff \forall p \in \fintrace, m \in \Store, \alpha \in \EE.\,\ftprod{c}{m}{p\cdot\alpha}\,\wedge\,\neg Sil_{\DD}(\alpha)\implies\,k_{\rightarrow}(c, m, p, \DD) = k(c, m, p \cdot \alpha, \DD)\]
+  \item \textbf{Definition of Non-Silent Trace Progress:} \\
+        For an arbitrary program $c$ with trace $t$ and memory $m$ s.t. $\tprod{c}{m}{t}$ and $p \leq t$. The assertion that $t$ has an additional non-silent event beyond $p$ is defined as:
+        \[ \prog{p}{t} \defiff \exists p' \leq t.\, p <_\DD p' \]
+  \item \textbf{Hyperproperty definition of Lfp}: \\
+        For an arbitrary set of traces, initial memory store pairs $T \subseteq \Store \times \trace$:
+        \[T \in \hlfp_\DD \defiff \forall (m_1, st_1), (m_2, st_2) \in T.\,m_1\indistinctD m_2\implies \forall p_1 \leq st_1, p_2 \leq st_2 \in \fintrace.\, p_1 <_{\DD} p_2 \implies \prog{p_1}{st_1} \]
+  \item \textbf{Knowledge based definition of Lfp}: \\
+        For an arbitrary program $c$:
+        \[c \in \klfp_\DD \defiff \forall p\in \fintrace, m \in \Store, \alpha \in \EE. \neg Sil(\alpha) \wedge \ftprod{c}{m}{p\cdot\alpha} \implies k(c,m,p,\DD) = k_\rightarrow (c,m,p,\DD)\]
 \end{enumerate}
-\newpage
+% \newpage
 \section*{Notable Facts (NF)}
 % for determinism and erased list formulation, I think that might make more sense in definitions, but its being placed here due to page space contraints :/
 \begin{enumerate}
@@ -115,44 +127,45 @@
 
   \item \textbf{Trace Prefix Maximization}: \\
         Given program $c$ as well as arbitrary $p \in \fintrace, m \in \Store$. \[
-          \pmprod{c}{m}{p} \implies
-          \exists st \in \trace.\,p\leq st \wedge \pprod{c}{m}{st}
+          \ftprod{c}{m}{p} \implies
+          \exists st \in \trace.\,p\leq st \wedge \tprod{c}{m}{st}
         \]
   \item \textbf{Alternative Formulation of Indistringuishable Traces}: \\
         using the erasure function $\erase{\cdot}$: $p_1 \indistinctD p_2$ and $p_1 \leq_{\DD} p_2$ can be obtained as follows:
-        \[p_1 \leq_{\DD} p_2 \iff \erase{p_1} \leq \erase{p_2}\]
+        \[p_1 <_{\DD} p_2 \iff \erase{p_1} < \erase{p_2}\]
         \[p_1 \indistinctD p_2 \iff \erase{p_1} = \erase{p_2}\]
 \end{enumerate}
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%[Proof]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section*{PsNi Proofs (PS)}
 
 \begin{enumerate}
   \item \textbf{Forward Proof (from Hyperproperty PsNi to Knowledge PsNi)}
 
-        Given that for an arbitrary program c, $\behav{c} \in \hpsni_{\DD}$,
-        show that $c \in \kpsni_{\DD}$.
+        Given that for an arbitrary program c, $\behav{c} \in \hpsni_{\DD}$, show that
+        $c \in \kpsni_{\DD}$.
 
         \textbf{Lemma 1.1:} if $\behav{c} \in \hpsni_{\DD}$, then for any $(m_1, st_1), (m_2, st_2) \in \behav{c}$: \[
           m_1 \indistinctD m_2
-          \iff m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\pmprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)
+          \iff m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\ftprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)
         \]
         \begin{addmargin}[1em]{2em}
           \textbf{Proof}: From the premise, assume that $\behav{c} \in \hpsni_{\DD}$. Take $(m_1, st_1), (m_2, st_2) \in \behav{c}$ for which $m_1 \indistinctD m_2$.
           \begin{enumerate}
-            \item Consider first the claim: \[m_1 \indistinctD m_2 \implies m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\pmprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)\]
+            \item Consider first the claim: \[m_1 \indistinctD m_2 \implies m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\ftprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)\]
 
                   Let arbitrary $p_1 \in \fintrace \leq st_1$. Since $m_1 \indistinctD m_2$ by
-                  assumption, applying definition (D.2) knowing $\behav{c} \in
-                    \hpsni_{\DD}$ implies that:
+                  assumption, applying definition (D.2) knowing $\behav{c} \in \hpsni_{\DD}$
+                  implies that:
                   \[
                     \exists p_2 \leq st_2 \in \fintrace.\, p_1 \indistinctD p_2
                   \]
                   Then applying definition (D.4) given that $p_2 \leq st_2$ shows that
-                  $\pmprod{c}{m_2}{p_2}$ as well.
+                  $\ftprod{c}{m_2}{p_2}$ as well.
 
                   Since $p_1$ was an arbitrarily chosen prefix of $st_1$, the two results above
                   suffice to prove the claim.
-            \item The converse: \[m_1 \indistinctD m_2 \impliedby m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\pmprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)\] follows immediately from the rules of logical conjunction
+            \item The converse: \[m_1 \indistinctD m_2 \impliedby m_1 \indistinctD m_2 \,\wedge\,\forall p_1 \in \fintrace \leq st_1.\exists p_2 \in \fintrace \leq st_2.\,(\ftprod{c}{m_2}{p_2}\,\wedge\,p_2\indistinctD p_1)\] follows immediately from the rules of logical conjunction
           \end{enumerate}
         \end{addmargin}
 
@@ -161,14 +174,14 @@
           Since $(m_1, st_1)$ and $(m_2, st_2)$ were arbitrarily chosen in lemma 1.1, Applying lemma 1.1 with definition (D.6) on any $(m, st) \in \behav{c}$ with any prefix $p \in \fintrace \leq st$ shows that:
           \begin{align*}
             k(c,m,p,\DD)
-             & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace. (\pmprod{c}{m'}{p'}\,\wedge\,p \indistinctD p')\} \\
+             & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace. (\ftprod{c}{m'}{p'}\,\wedge\,p \indistinctD p')\} \\
              & = \{m' \,\vert\, m' \indistinctD m \wedge \top\}
             = \{m' \,\vert\, m' \indistinctD m\}
           \end{align*}
         \end{addmargin}
         The claim $c \in \kpsni_{\DD}$ follows immediately from lemma 1.2, as for
         any arbitrary choice of $m \in \Store$, $p \in \fintrace$, and $\alpha \in \EE$:
-        if $\pmprod{c}{m}{p\cdot\alpha}$ then:
+        if $\ftprod{c}{m}{p\cdot\alpha}$ then:
         \[
           k(c,m,p,\DD)
           = \{m'\,\vert\, m' \indistinctD m\}
@@ -178,8 +191,8 @@
 
   \item \textbf{Backward Proof (from Knowledge PsNi to Hyperproperty PsNi)}
 
-        Given that for an arbitrary program $c$ where $c \in \kpsni_{\DD}$,
-        show that $\behav{c} \in \hpsni_{\DD}$.
+        Given that for an arbitrary program $c$ where $c \in \kpsni_{\DD}$, show that
+        $\behav{c} \in \hpsni_{\DD}$.
 
         \textbf{Lemma 2.1:} if $c \in \kpsni_{\DD}$, then $\forall p \in \fintrace, m \in \Store.\,\conf{c}{m}\rightarrow_{p}^{*}\implies k(c, m, p, \DD) = \{m'\,\vert\,m' \indistinctD m\}$
         \begin{addmargin}[1em]{2em}
@@ -204,18 +217,18 @@
             = \{m'\,\vert\,m' \indistinctD m\}
           \]
         \end{addmargin}
-        Let $(m_1, st_1), (m_2, st_2) \in \behav{c}$ be arbitrary memory store, trace pairs where $\pprod{c}{m_1}{st_1}$ and $\pprod{c}{m_2}{st_2}$, subject to the constraint that $m_1 \indistinctD m_2$.
+        Let $(m_1, st_1), (m_2, st_2) \in \behav{c}$ be arbitrary memory store, trace pairs where $\tprod{c}{m_1}{st_1}$ and $\tprod{c}{m_2}{st_2}$, subject to the constraint that $m_1 \indistinctD m_2$.
 
         Let $p_1 \in \fintrace \leq st_1$, from (D.4), it follows that
-        $\pmprod{c}{m_1}{p_1}$.
+        $\ftprod{c}{m_1}{p_1}$.
 
         From lemma 2.1, $k(c,m_1,p_1,\DD) = \{m\,\vert\,m \indistinctD m_1\}$.
 
         As $m_1 \indistinctD m_2$ from the premise, it follows that $m_2 \in
           k(c,m_1,p_1,\DD)$.
 
-        Then from (D.6), $\exists p \in \fintrace.\,\pmprod{c}{m_2}{p}\wedge p
-          \indistinctD p_1$, after which applying (D.4) with $\pprod{c}{m_2}{st_2}$ shows
+        Then from (D.6), $\exists p \in \fintrace.\,\ftprod{c}{m_2}{p}\wedge p
+          \indistinctD p_1$, after which applying (D.4) with $\tprod{c}{m_2}{st_2}$ shows
         that $p \leq st_2$.
 
         Using $p$ as the witness then fulfills the required property that: \[
@@ -241,22 +254,22 @@
 
   %       \textbf{Lemma 3.1:} if $\behav{c} \in \hpini_{\DD}$, then for any $m \in \Store, p \in \fintrace, \alpha \in \EE$, and $m' \in \Store$ s.t. $m \indistinctD m'$ and $\neg Sil_{\DD}(\alpha)$:
   %       \[
-  %         \exists p',\alpha'.\, \pmprod{c}{m'}{p'\cdot\alpha'} \wedge \neg Sil_{\DD}(\alpha') \wedge p \indistinctD p'.
-  %         \implies \exists p^*.\,\pmprod{c}{m'}{p^*} \wedge p\cdot\alpha \indistinctD p^*
+  %         \exists p',\alpha'.\, \ftprod{c}{m'}{p'\cdot\alpha'} \wedge \neg Sil_{\DD}(\alpha') \wedge p \indistinctD p'.
+  %         \implies \exists p^*.\,\ftprod{c}{m'}{p^*} \wedge p\cdot\alpha \indistinctD p^*
   %       \]
   %       \begin{addmargin}[1em]{2em}
   %         \textbf{Proof:} Consider arbitrary $m \in \Store, p \in \fintrace, \alpha \in \EE$ such that
-  %         $\pmprod{c}{m}{p\cdot\alpha}$.
+  %         $\ftprod{c}{m}{p\cdot\alpha}$.
 
   %         From (NF.2), it follows that $\exists st \in \trace.\,p\cdot\alpha\leq st$ and
-  %         $\pprod{c}{m}{st}$.
+  %         $\tprod{c}{m}{st}$.
 
   %         Additionally, consider arbitrary $m' \in \Store$ where $m \indistinctD m'$ and
   %         a particular $p' \in \fintrace, \alpha' \in \EE$ such that $p \indistinctD
-  %           p'$, $\pmprod{c'}{m'}{p'\cdot\alpha'}$ and $\neg Sil_{\DD}(\alpha)$.
+  %           p'$, $\ftprod{c'}{m'}{p'\cdot\alpha'}$ and $\neg Sil_{\DD}(\alpha)$.
 
   %         Also from (NF.2), it follows that $\exists st' \in \trace.\,p'\cdot\alpha'\leq
-  %           st'$ and $\pprod{c}{m'}{st'}$.
+  %           st'$ and $\tprod{c}{m'}{st'}$.
 
   %         Since $\behav{c} \in \hpini_{\DD}$ and $m \indistinctD m'$, it
   %         follows that: \[
@@ -266,7 +279,7 @@
   %         then taking $p_a = p \cdot \alpha$ and $p_b = p' \cdot \alpha'$ yields that either:
   %         \begin{itemize}
   %           \item $\exists p^{\dagger} \leq p' \cdot \alpha'.\, p^{\dagger} \indistinctD p \cdot \alpha$
-  %                 --- where $p^{\dagger}$ directly serves as the witness $p^*$, as $\pmprod{c}{m'}{p^{\dagger}}$ can be shown by applying definition (D.4) to $st'$.
+  %                 --- where $p^{\dagger}$ directly serves as the witness $p^*$, as $\ftprod{c}{m'}{p^{\dagger}}$ can be shown by applying definition (D.4) to $st'$.
   %           \item $\exists p^{\dagger} \leq p \cdot \alpha.\, p^{\dagger} \indistinctD p' \cdot \alpha'$ --- in this case, it must follow that $p < p^{\dagger} \leq p \cdot \alpha$. Otherwise: $p'
   %                   \cdot \alpha' \leq_{\DD} p \indistinctD p'$, which contradicts the fact
   %                 that $\neg Sil_{\DD}(\alpha')$.
@@ -277,46 +290,46 @@
 
   %       % resulting implication of KPiNi
 
-  %       The claim $c \in \kpini_{\DD}$ then follows straightforwardly from applying lemma 3.1 with the progress and attacker knowledge definitions---as for any arbitrary choice of $m \in \Store, p \in \fintrace$, and $\alpha \in \EE$: if $\pmprod{c}{m}{p\cdot\alpha}$ and $\neg Sil_{\DD}(\alpha)$ then:
+  %       The claim $c \in \kpini_{\DD}$ then follows straightforwardly from applying lemma 3.1 with the progress and attacker knowledge definitions---as for any arbitrary choice of $m \in \Store, p \in \fintrace$, and $\alpha \in \EE$: if $\ftprod{c}{m}{p\cdot\alpha}$ and $\neg Sil_{\DD}(\alpha)$ then:
   %       \begin{align*}
   %         k_{\rightarrow}(c,m,p,\DD)
-  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\pmprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha') \,\wedge\,p \indistinctD p')\} \\
-  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p^*\in \fintrace. (\pmprod{c}{m'}{p^*} \,\wedge\,p \cdot \alpha \indistinctD p^*)\}                                             \\
+  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\ftprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha') \,\wedge\,p \indistinctD p')\} \\
+  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p^*\in \fintrace. (\ftprod{c}{m'}{p^*} \,\wedge\,p \cdot \alpha \indistinctD p^*)\}                                             \\
   %          & = k(c,m,p\cdot\alpha,\DD)
   %       \end{align*}
   %       \newpage
   \item \textbf{Forward Proof -- (Alternate Formulation) (from Hyperproperty PiNi to Knowledge PiNi)}
 
-        Given that for an arbitrary program c, $\behav{c} \in \hpini_{\DD}$,
-        show that $c \in \kpini_{\DD}$.
+        Given that for an arbitrary program c, $\behav{c} \in \hpini_{\DD}$, show that
+        $c \in \kpini_{\DD}$.
 
         % helpful lemma
 
         \textbf{Lemma 3.1:} if $\behav{c} \in \hpini_{\DD}$, then for any $m \in \Store, p \in \fintrace, \alpha \in \EE$, and $m' \in \Store$ s.t. $m \indistinctD m'$ and $\neg Sil_{\DD}(\alpha)$:
         \[
-          \exists p',\alpha'.\, \pmprod{c}{m'}{p'} \wedge \neg Sil_{\DD}(\alpha') \wedge p' \indistinctD p\cdot\alpha'.
-          \implies \exists p^*.\,\pmprod{c}{m'}{p^*} \wedge p\cdot\alpha \indistinctD p^*
+          \exists p',\alpha'.\, \ftprod{c}{m'}{p'} \wedge \neg Sil_{\DD}(\alpha') \wedge p' \indistinctD p\cdot\alpha'.
+          \implies \exists p^*.\,\ftprod{c}{m'}{p^*} \wedge p\cdot\alpha \indistinctD p^*
         \]
         \begin{addmargin}[1em]{2em}
           \textbf{Proof:} Consider arbitrary $m \in \Store, p \in \fintrace, \alpha \in \EE$ such that
-          $\pmprod{c}{m}{p\cdot\alpha}$.
+          $\ftprod{c}{m}{p\cdot\alpha}$.
 
           From (NF.2), it follows that $\exists st \in \trace.\,p\cdot\alpha\leq st$ and
-          $\pprod{c}{m}{st}$.
+          $\tprod{c}{m}{st}$.
 
           Additionally, consider arbitrary $m' \in \Store$ where $m \indistinctD m'$ and
-          a particular $p' \in \fintrace, \alpha' \in \EE$ such that $p \indistinctD
-            p'$, $\pmprod{c'}{m'}{p'}$ and $\neg Sil_{\DD}(\alpha')$.
+          a particular $p' \in \fintrace, \alpha' \in \EE$ such that $p \indistinctD p'$,
+          $\ftprod{c'}{m'}{p'}$ and $\neg Sil_{\DD}(\alpha')$.
 
-          Also from (NF.2), it follows that $\exists st' \in \trace.\,p'\leq
-            st'$ and $\pprod{c}{m'}{st'}$.
+          Also from (NF.2), it follows that $\exists st' \in \trace.\,p'\leq st'$ and
+          $\tprod{c}{m'}{st'}$.
 
-          Since $\behav{c} \in \hpini_{\DD}$ and $m \indistinctD m'$, it
-          follows that: \[
+          Since $\behav{c} \in \hpini_{\DD}$ and $m \indistinctD m'$, it follows that: \[
             \forall p_a \leq st, p_b \leq st'. p_a \leq_{\DD} p_b \vee p_b \leq_{\DD} p_a
           \]
 
-          then taking $p_a = p \cdot \alpha$ and $p_b = p'$ yields that $\alpha = \alpha'$ from case analysis and using (NF.3) with list properties:
+          then taking $p_a = p \cdot \alpha$ and $p_b = p'$ yields that $\alpha =
+            \alpha'$ from case analysis and using (NF.3) with list properties:
 
           \begin{minipage}{.4\textwidth}
             \centering
@@ -337,53 +350,67 @@
             \end{align*}
           \end{minipage}
 
-          After which the conclusion follows immediately, as $p' \indistinctD p \cdot \alpha' = p \cdot \alpha$, allowing $p'$ to serve as witness $p*$.
+          After which the conclusion follows immediately, as $p' \indistinctD p \cdot
+            \alpha' = p \cdot \alpha$, allowing $p'$ to serve as witness $p*$.
         \end{addmargin}
 
         % resulting implication of KPiNi
 
-        The claim $c \in \kpini_{\DD}$ then follows straightforwardly from applying lemma 3.1 with the progress and attacker knowledge definitions---as for any arbitrary choice of $m \in \Store, p \in \fintrace$, and $\alpha \in \EE$: if $\pmprod{c}{m}{p\cdot\alpha}$ and $\neg Sil_{\DD}(\alpha)$ then:
+        The claim $c \in \kpini_{\DD}$ then follows straightforwardly from applying
+        lemma 3.1 with the progress and attacker knowledge definitions---as for any
+        arbitrary choice of $m \in \Store, p \in \fintrace$, and $\alpha \in \EE$: if
+        $\ftprod{c}{m}{p\cdot\alpha}$ and $\neg Sil_{\DD}(\alpha)$ then:
         \begin{align*}
           k_{\rightarrow}(c,m,p,\DD)
-           & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\pmprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha') \,\wedge\,p \indistinctD p')\} \\
-           & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p^*\in \fintrace. (\pmprod{c}{m'}{p^*} \,\wedge\,p \cdot \alpha \indistinctD p^*)\}                                             \\
+           & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\ftprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha') \,\wedge\,p \indistinctD p')\} \\
+           & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p^*\in \fintrace. (\ftprod{c}{m'}{p^*} \,\wedge\,p \cdot \alpha \indistinctD p^*)\}                                             \\
            & = k(c,m,p\cdot\alpha,\DD)
         \end{align*}
         \newpage
 
   \item \textbf{Backward Proof (from Knowledge PiNi to Hyperproperty PiNi)}
 
-        Given that for an arbitrary program $c$ where $c \in \kpini_{\DD}$,
-        show that $\behav{c} \in \hpini_{\DD}$.
+        Given that for an arbitrary program $c$ where $c \in \kpini_{\DD}$, show that
+        $\behav{c} \in \hpini_{\DD}$.
 
         % Lemma for the on-the-board representation of PiNi's implication -- which I found needed determinism to generalize into this form.
         % Otherwise, for each alpha1 after p1 produced by m1, there'd be only a guarantee that some particular p2 * alpha2 is indistinguishable 
         %            from  p1 * alpha1.
 
-        \textbf{Lemma 4.1:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$, $p_1, p_2 \in \fintrace$, $\alpha_1, \alpha_2 \in \EE$ where $\neg Sil_\DD(\alpha_1)$, $\neg Sil_\DD(\alpha_2)$, $m_1 \indistinctD m_2$, $p_1 \indistinctD p_2$, $\pmprod{c}{m_1}{p_1 \cdot \alpha_1}$ and $\pmprod{c}{m_2}{p_2 \cdot \alpha_2}$: it follows that
+        \textbf{Lemma 4.1:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$, $p_1, p_2 \in \fintrace$, $\alpha_1, \alpha_2 \in \EE$ where $\neg Sil_\DD(\alpha_1)$, $\neg Sil_\DD(\alpha_2)$, $m_1 \indistinctD m_2$, $p_1 \indistinctD p_2$, $\ftprod{c}{m_1}{p_1 \cdot \alpha_1}$ and $\ftprod{c}{m_2}{p_2 \cdot \alpha_2}$: it follows that
         \[
-          \exists\, p \in \fintrace, \alpha \in \EE.\, \neg Sil_\DD(\alpha) \,\wedge\, \pmprod{c}{m_1}{p} \wedge\, p \indistinctD p_2\cdot\alpha \implies p_1\cdot\alpha_1 \indistinctD p_2\cdot\alpha_2
+          \exists\, p \in \fintrace, \alpha \in \EE.\, \neg Sil_\DD(\alpha) \,\wedge\, \ftprod{c}{m_1}{p} \wedge\, p \indistinctD p_2\cdot\alpha \implies p_1\cdot\alpha_1 \indistinctD p_2\cdot\alpha_2
         \]
 
         \begin{addmargin}[1em]{2em}
           \textbf{Proof:} Assuming the premises:
           \begin{itemize}
             \item $m_1 \indistinctD m_2$
-            \item $\pmprod{c}{m_1}{p_1} \wedge\, \pmprod{c}{m_2}{p_2 \cdot \alpha_2}$
-            \item $\exists\, p, \alpha.\, \neg Sil_\DD(\alpha) \wedge \pmprod{c}{m_1}{p} \wedge\, p \indistinctD p_2\cdot\alpha$
+            \item $\ftprod{c}{m_1}{p_1} \wedge\, \ftprod{c}{m_2}{p_2 \cdot \alpha_2}$
+            \item $\exists\, p, \alpha.\, \neg Sil_\DD(\alpha) \wedge \ftprod{c}{m_1}{p} \wedge\, p \indistinctD p_2\cdot\alpha$
           \end{itemize}
           it follows that $m_1 \in k_\rightarrow(c,m_2,p_2,\DD)$ (D.6).
 
-          Since $c \in \kpini_\DD \implies k_\rightarrow(c,m_2,p_2,\DD) = k(c,m_2,p_2 \cdot \alpha_2,\DD)$, it means that $m_1 \in k(c,m_2,p_2 \cdot \alpha_2,\DD)$ as well.
+          Since $c \in \kpini_\DD \implies k_\rightarrow(c,m_2,p_2,\DD) = k(c,m_2,p_2
+            \cdot \alpha_2,\DD)$, it means that $m_1 \in k(c,m_2,p_2 \cdot \alpha_2,\DD)$
+          as well.
 
-          From the definition of attacker knowledge, there exists some $p_1'$ such that $\pmprod{c}{m_1}{p_1'}$ and $p_1' \indistinctD p_2 \cdot \alpha_2$.
+          From the definition of attacker knowledge, there exists some $p_1'$ such that
+          $\ftprod{c}{m_1}{p_1'}$ and $p_1' \indistinctD p_2 \cdot \alpha_2$.
 
-          From the premise, we know that $\alpha$, $\alpha_1$, and $\alpha_2$ are all low-visible (non-silent) events. Additionally, from determinism (NF.1), it follows that event produced from memory $m_1$ after $p_1$ will be unique.
+          From the premise, we know that $\alpha$, $\alpha_1$, and $\alpha_2$ are all
+          low-visible (non-silent) events. Additionally, from determinism (NF.1), it
+          follows that event produced from memory $m_1$ after $p_1$ will be unique.
 
-          Therefore, since $\pmprod{c}{m_1}{p_1 \cdot \alpha_1}$, $\pmprod{c}{m_2}{p_2 \cdot \alpha_2}$, and $p_1 \indistinctD p_2$, it must be the case that $p_1' = p_1 \cdot \alpha_1$.
+          Therefore, since $\ftprod{c}{m_1}{p_1 \cdot \alpha_1}$, $\ftprod{c}{m_2}{p_2
+              \cdot \alpha_2}$, and $p_1 \indistinctD p_2$, it must be the case that $p_1' =
+            p_1 \cdot \alpha_1$.
 
           \begin{tcolorbox}
-            Note: this last part of the lemma argues that since $c$ is deterministic and the traces produced by $m_1$ and $m_2$ are indistringuishable up to $p_1/p_2$ and the events that follow $p_1/p_2$ ($\alpha_1$ and $\alpha_2$) must be non-silent: if there's some trace produced by $m_1$ indistringuishable from $p_2 \cdot \alpha_2$, it has to be $p_1 \cdot \alpha_1$. This is since the non-silence + indistinguishibility means some visible event must occur immediately, and there is only one possible event produced because of determinism.
+            Note: this last part of the lemma argues that since $c$ is deterministic and the traces produced by $m_1$
+            and $m_2$ are indistringuishable up to $p_1/p_2$ and the events that follow $p_1/p_2$ ($\alpha_1$ and
+            $\alpha_2$) must be non-silent: if there's some trace produced by $m_1$ indistringuishable from $p_2 \cdot \alpha_2$, it has to be $p_1 \cdot \alpha_1$. This is since the non-silence + indistinguishibility means
+            some visible event must occur immediately, and there is only one possible event produced because of determinism.
 
             \vspace{2mm}
             I'm not too sure if the current formulation above is a sufficiently rigorous way to write that out.
@@ -392,7 +419,7 @@
 
         % lemma with the main helpful consequence
 
-        \textbf{Lemma 4.2:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$ and $p_1, p_2 \in \fintrace$: if $m_1 \indistinctD m_2$, $\pmprod{c}{m_1}{p_1}$, and $\pmprod{c}{m_2}{p_2}$ then
+        \textbf{Lemma 4.2:} Given $c \in \kpini_{\DD}$ and that $c$ is deterministic, for any $m_1, m_2 \in \Store$ and $p_1, p_2 \in \fintrace$: if $m_1 \indistinctD m_2$, $\ftprod{c}{m_1}{p_1}$, and $\ftprod{c}{m_2}{p_2}$ then
         \[
           \len{\erase{p_1}} \leq \len{\erase{p_2}} \implies \erase{p_1} \leq \erase{p_2}
         \]
@@ -410,11 +437,18 @@
               \len{\erase{p'_1}} \leq \len{\erase{p_2}} \implies \erase{p'_1} \leq \erase{p_2}
             \]
 
-            Since $\len{\erase{p_1}} = n + 1$, it follows that there exists $p_{1\DD}, \alpha_1$ where $\neg Sil_\DD(\alpha_1) \wedge \erase{p_1} = p_{1\DD} \cdot \alpha_1$.
+            Since $\len{\erase{p_1}} = n + 1$, it follows that there exists $p_{1\DD},
+              \alpha_1$ where $\neg Sil_\DD(\alpha_1) \wedge \erase{p_1} = p_{1\DD} \cdot
+              \alpha_1$.
 
-            Applying the inductive hypothesis shows that $p_{1\DD} \leq \erase{p_2}$. Combining this with the fact that $\len{p_{1\DD}} = n < \len{\erase{p_2}}$ implies that there exists $p_{2\DD}, \alpha_2$ where $p_{2\DD} \cdot \alpha_2 \leq \erase{p_2}$ and $p_{1\DD} = p_{2\DD}$.
+            Applying the inductive hypothesis shows that $p_{1\DD} \leq \erase{p_2}$.
+            Combining this with the fact that $\len{p_{1\DD}} = n < \len{\erase{p_2}}$
+            implies that there exists $p_{2\DD}, \alpha_2$ where $p_{2\DD} \cdot \alpha_2
+              \leq \erase{p_2}$ and $p_{1\DD} = p_{2\DD}$.
 
-            Since $c \in \kpini_{\DD}$, c is deterministic, $m_1 \indistinctD m_2$,  $\pmprod{c}{m_1}{p_1}$, $\neg Sil_\DD(\alpha_1)$, and $p_{1\DD} \cdot \alpha_1 = p_{2\DD} \cdot \alpha_1$ , it follows from lemma 4.1 that
+            Since $c \in \kpini_{\DD}$, c is deterministic, $m_1 \indistinctD m_2$,
+            $\ftprod{c}{m_1}{p_1}$, $\neg Sil_\DD(\alpha_1)$, and $p_{1\DD} \cdot \alpha_1
+              = p_{2\DD} \cdot \alpha_1$ , it follows from lemma 4.1 that
             \begin{align*}
               \erase{p_1}                & = p_{1\DD} \cdot \alpha_1 = p_{2\DD} \cdot \alpha_2 \leq \erase{p_2} \\
               \implies \erase{p_1}       & \leq \erase{p_2}                                                     \\
@@ -425,8 +459,101 @@
 
         % final steps from lemma to theorem
 
-        The claim that $\behav{c} \in \hpini_\DD$ then follows. Let $(m_1, st_1), (m_2, st_2) \in \behav{c}$ be arbitrarily chosen trace productions s.t. $m_1 \leq m_2$. Then, arbitrarily pick $p_1, p_2 \in \fintrace$ s.t. $p_1 \leq st_1, p_2 \leq st_2$ and consider the comparison of $\len{\erase{p_1}}$ and $\len{\erase{p_2}}$.
+        The claim that $\behav{c} \in \hpini_\DD$ then follows. Let $(m_1, st_1), (m_2,
+          st_2) \in \behav{c}$ be arbitrarily chosen trace productions s.t. $m_1 \leq
+          m_2$. Then, arbitrarily pick $p_1, p_2 \in \fintrace$ s.t. $p_1 \leq st_1, p_2
+          \leq st_2$ and consider the comparison of $\len{\erase{p_1}}$ and
+        $\len{\erase{p_2}}$.
 
-        Without loss of generality, assume $\len{\erase{p_1}} \leq \len{\erase{p_2}}$. From lemma 4.2, it then follows that $\erase{p_1} \leq  \erase{p_2} \implies p_1 \leq_\DD p_2$ (from (NF.3)), as desired.
+        Without loss of generality, assume $\len{\erase{p_1}} \leq \len{\erase{p_2}}$.
+        From lemma 4.2, it then follows that $\erase{p_1} \leq \erase{p_2} \implies p_1
+          \leq_\DD p_2$ (from (NF.3)), as desired.
 \end{enumerate}
+
+\newpage
+\section*{Lfp Proofs (LFP)}
+
+\begin{enumerate}
+  \item \textbf{Forward Proof (from Hyperproperty Lfp to Knowledge Lfp)}
+        Given that for an arbitrary program $c$ where $\behav{c} \in \hlfp_\DD$, show that $c \in \klfp_\DD$.
+
+        \textbf{Lemma 5.1:} Given $c$ s.t. $\behav{c} \in \hlfp_\DD$, for any $p \in \fintrace, m \in \Store, \alpha \in \EE$ s.t. $\neg Sil(\alpha)$ and $\ftprod{c}{m}{p\cdot\alpha}$: it follows that for any $m' \indistinctD m \in \Store$:
+        \[
+          (\exists p'. p' \indistinctD p \wedge \ftprod{c}{m'}{p'}) \implies (\exists p^*, \alpha'. p^* \indistinctD p\cdot\alpha' \wedge \neg Sil(\alpha') \wedge \ftprod{c}{m'}{p^*})
+        \]
+
+        \begin{addmargin}[1em]{2em}
+          \textbf{Proof:} let $p \in \fintrace, m \in \Store, \alpha \in \EE$ s.t. $\neg Sil(\alpha)$, $\ftprod{c}{m}{p\cdot\alpha}$. Then, also let $p' \in \fintrace$ and $m' \indistinctD m \in \Store$ s.t. $p' \indistinctD p$ and $\ftprod{c}{m'}{p'}$.
+
+          From (NF.2), finite traces $p \cdot \alpha$ and $p'$ can be maximized: into
+          some $st_1, st_2 \in \trace$ where $p\cdot\alpha \leq st_2$ and $p' \leq st_1$
+
+          Since $p' \indistinctD p$ and $\neg Sil(\alpha)$, it follows that $p' <_\DD p
+            \cdot \alpha$. Applying defn. \hlfp{} (D.13) then shows $\prog{p'}{st_1}$, or
+          $\exists p'' \leq st_1.\, p' <_\DD p''$.
+
+          \begin{itemize}
+            \item Since $p' <_\DD p''$, $\exists\, \alpha' \in \EE$ where $\neg Sil(\alpha')$
+                  s.t. $p' \cdot \alpha' \leq_\DD p''$. \\ Then, from the definition of low
+                  prefix (D.9), it follows that $\exists p^* \leq p''$ for which $p^*
+                    \indistinctD p' \cdot \alpha' \indistinctD p \cdot \alpha'$
+
+            \item since $p^* \leq p'' \leq st_1$, it follows from the definition of trace
+                  production (D.4) that $\ftprod{c}{m}{p^*}$
+          \end{itemize}
+          Therefore using $p^*$ and $\alpha'$ as witnesses yields the desired result.
+        \end{addmargin}
+
+        The claim that $c \in \klfp_\DD$ then follows immediately from application of
+        Lemma 5.1 as for any $p \in \fintrace$, $m \in \Store$, and $\alpha \in \EE$
+        where $\neg Sil(\alpha)$ and $\ftprod{c}{m}{p\cdot\alpha}$:
+        \begin{align*}
+          k(c,m,p,\DD) & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,(\exists p'\in \fintrace. \ftprod{c}{m'}{p'} \wedge\,p \indistinctD p')\}                                 \\
+                       & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,(\exists p^*\in \fintrace, \alpha' \in \EE. \ftprod{c}{m'}{p^*} \wedge\,\neg Sil(\alpha')\wedge p^* \indistinctD p\cdot\alpha')\} \\
+                       & = k_\rightarrow{}(c,m,p,\DD)
+        \end{align*}
+        % \newpage
+  \item \textbf{Backward Proof (from Knowledge Lfp to Hyperproperty Lfp)}
+
+        \textbf{Lemma 6.1:} Given $c$ s.t. $c \in \klfp_\DD$, for all $p \in \fintrace, \alpha \in \EE, m \in \Store$ where $\neg Sil(\alpha)$ and $\ftprod{c}{m}{p\cdot\alpha}$: it follows that for any $m' \indistinctD m \in \Store$:
+        \[
+          (\exists p'.\, p' \indistinctD p \wedge \ftprod{c}{m'}{p'} )
+          \implies (\exists p^*, \alpha'.\, p^*\indistinctD p\cdot\alpha' \wedge \neg Sil(\alpha') \wedge \ftprod{c}{m'}{p^*})
+        \]
+
+        \begin{addmargin}[1em]{2em}
+          \textbf{Proof:} consider $m, p$ s.t. $\ftprod{c}{m}{p\cdot\alpha}$, as well as $m', p'$ where $m \indistinctD m'$, $p \indistinctD p'$, and $\ftprod{c}{m'}{p'}$. From the attacker knowledge definition (D.6): $m' \in k(c,m,p,\DD)$
+
+          Then from $c \in \klfp$, it follows that $m' \in k_\rightarrow{}(c,m,p,\DD)$ as
+          well.
+
+          From the progress knowledge definition (D.10), it follows that $\exists p^*,
+            \alpha'.\, p^* \indistinctD p \cdot \alpha$, $\neg Sil(\alpha')$, and
+          $\ftprod{c}{m'}{p^*}$, which is the desired result.
+        \end{addmargin}
+
+        Let $(m_1, st_1), (m_2, st_2) \in \behav{c}$ where $m_1 \indistinctD m_2$.
+
+        Let $p_1 \in \fintrace \leq st_1$, from (D.4), it follows that
+        $\ftprod{c}{m_1}{p_1}$.
+
+        Let $p_2 \in \fintrace \leq st_2$ where $p_1 <_\DD p_2$, from (D.4), it follows
+        that $\ftprod{c}{m_2}{p_2}$.
+
+        Since $p_1 \leq p_2$, it follows from the low prefix defn. (D.9) that $\exists
+          p_2' < p_2\,. p_1 \indistinctD p_2'$ and (D.4) that $\ftprod{p}{m_2}{p_2'}$.
+
+        Applying Lemma 6.1 then shows $\exists p^*, \alpha'$ where $p^* \indistinctD
+          p_2' \cdot \alpha$, $\neg Sil(\alpha)$, and $\ftprod{c}{m_1}{p^*}$. From there,
+        maximalization (NF.2) and determinism show that $p^* \leq st_1$.
+
+        Then $p^* \indistinctD p_2' \cdot \alpha \indistinctD p_1 \cdot \alpha$, and as
+        $\neg Sil(\alpha)$: $p^* >_\DD p_1$, combining with the previous result shows
+        that $p^*$ can serve as the witness for $\prog{p_1}{t_1}$.
+
+        Thus, as both $p_1 \leq st_1$ and $p_2 \leq st_2$, as well as both $(m_1,
+          st_1)$ and $(m_2, st_2) \in \behav{c}$ are arbitrary, it follows that
+        $\behav{c} \in \hlfp_\DD$, as desired.
+\end{enumerate}
+
 \end{document}
