@@ -1,4 +1,4 @@
-aux/*
-!aux/*.pdf
-aux/*_old*.pdf
+out/*
+!out/*.pdf
+out/*_old*.pdf
 *_old*.tex
