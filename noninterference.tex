@@ -3,7 +3,6 @@
 \frenchspacing
 \usepackage[margin=0.65in,letterpaper]{geometry}
 \usepackage{newtx}
-% \usepackage{titlesc}
 \usepackage{tcolorbox}
 
 \let\Bbbk\relax % Apparently amssymb defines \Bbbk and so does newtxmath
@@ -13,9 +12,6 @@
 \usepackage{suffix}
 \usepackage{scrextend}
 \pagestyle{plain}
-
-% \titleformat*{\section}{\bfseries\large}
-% \titlespacing{\section}{0pt}{*1.5}{*0.75}
 
 \newcommand{\programfont}[1]{\ensuremath{\mathsf{#1}}\xspace}
 
@@ -115,7 +111,9 @@
 \end{enumerate}
 % \newpage
 \section*{Notable Facts (NF)}
+
 % for determinism and erased list formulation, I think that might make more sense in definitions, but its being placed here due to page space contraints :/
+
 \begin{enumerate}
   \item \textbf{Determinism}: \\
         If a program $c$ is deterministic, thn it follows that:
@@ -245,59 +243,6 @@
 \newpage
 \section*{PiNi Proofs (PI)}
 \begin{enumerate}
-  % \item \textbf{Forward Proof (from Hyperproperty PiNi to Knowledge PiNi)}
-
-  %       Given that for an arbitrary program c, $\behav{c} \in \hpini_{\DD}$,
-  %       show that $c \in \kpini_{\DD}$.
-
-  %       % helpful lemma
-
-  %       \textbf{Lemma 3.1:} if $\behav{c} \in \hpini_{\DD}$, then for any $m \in \Store, p \in \fintrace, \alpha \in \EE$, and $m' \in \Store$ s.t. $m \indistinctD m'$ and $\neg Sil_{\DD}(\alpha)$:
-  %       \[
-  %         \exists p',\alpha'.\, \ftprod{c}{m'}{p'\cdot\alpha'} \wedge \neg Sil_{\DD}(\alpha') \wedge p \indistinctD p'.
-  %         \implies \exists p^*.\,\ftprod{c}{m'}{p^*} \wedge p\cdot\alpha \indistinctD p^*
-  %       \]
-  %       \begin{addmargin}[1em]{2em}
-  %         \textbf{Proof:} Consider arbitrary $m \in \Store, p \in \fintrace, \alpha \in \EE$ such that
-  %         $\ftprod{c}{m}{p\cdot\alpha}$.
-
-  %         From (NF.2), it follows that $\exists st \in \trace.\,p\cdot\alpha\leq st$ and
-  %         $\tprod{c}{m}{st}$.
-
-  %         Additionally, consider arbitrary $m' \in \Store$ where $m \indistinctD m'$ and
-  %         a particular $p' \in \fintrace, \alpha' \in \EE$ such that $p \indistinctD
-  %           p'$, $\ftprod{c'}{m'}{p'\cdot\alpha'}$ and $\neg Sil_{\DD}(\alpha)$.
-
-  %         Also from (NF.2), it follows that $\exists st' \in \trace.\,p'\cdot\alpha'\leq
-  %           st'$ and $\tprod{c}{m'}{st'}$.
-
-  %         Since $\behav{c} \in \hpini_{\DD}$ and $m \indistinctD m'$, it
-  %         follows that: \[
-  %           \forall p_a \leq st, p_b \leq st'. p_a \leq_{\DD} p_b \vee p_b \leq_{\DD} p_a
-  %         \]
-
-  %         then taking $p_a = p \cdot \alpha$ and $p_b = p' \cdot \alpha'$ yields that either:
-  %         \begin{itemize}
-  %           \item $\exists p^{\dagger} \leq p' \cdot \alpha'.\, p^{\dagger} \indistinctD p \cdot \alpha$
-  %                 --- where $p^{\dagger}$ directly serves as the witness $p^*$, as $\ftprod{c}{m'}{p^{\dagger}}$ can be shown by applying definition (D.4) to $st'$.
-  %           \item $\exists p^{\dagger} \leq p \cdot \alpha.\, p^{\dagger} \indistinctD p' \cdot \alpha'$ --- in this case, it must follow that $p < p^{\dagger} \leq p \cdot \alpha$. Otherwise: $p'
-  %                   \cdot \alpha' \leq_{\DD} p \indistinctD p'$, which contradicts the fact
-  %                 that $\neg Sil_{\DD}(\alpha')$.
-
-  %                 This contraint means that $p^{\dagger} = p \cdot \alpha$, so $p' \cdot \alpha'$ serves as the witness $p^*$.
-  %         \end{itemize}
-  %       \end{addmargin}
-
-  %       % resulting implication of KPiNi
-
-  %       The claim $c \in \kpini_{\DD}$ then follows straightforwardly from applying lemma 3.1 with the progress and attacker knowledge definitions---as for any arbitrary choice of $m \in \Store, p \in \fintrace$, and $\alpha \in \EE$: if $\ftprod{c}{m}{p\cdot\alpha}$ and $\neg Sil_{\DD}(\alpha)$ then:
-  %       \begin{align*}
-  %         k_{\rightarrow}(c,m,p,\DD)
-  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p'\in \fintrace, \alpha'\in\EE. (\ftprod{c}{m'}{p'\cdot\alpha'} \wedge\, \neg Sil_{\DD}(\alpha') \,\wedge\,p \indistinctD p')\} \\
-  %          & = \{m' \,\vert\, m' \indistinctD m \,\wedge\,\exists p^*\in \fintrace. (\ftprod{c}{m'}{p^*} \,\wedge\,p \cdot \alpha \indistinctD p^*)\}                                             \\
-  %          & = k(c,m,p\cdot\alpha,\DD)
-  %       \end{align*}
-  %       \newpage
   \item \textbf{Forward Proof -- (Alternate Formulation) (from Hyperproperty PiNi to Knowledge PiNi)}
 
         Given that for an arbitrary program c, $\behav{c} \in \hpini_{\DD}$, show that
@@ -373,7 +318,7 @@
         Given that for an arbitrary program $c$ where $c \in \kpini_{\DD}$, show that
         $\behav{c} \in \hpini_{\DD}$.
 
-        % Lemma for the on-the-board representation of PiNi's implication -- which I found needed determinism to generalize into this form.
+        % Lemma for the on-the-board representation of PiNi's implication -- needed determinism to generalize into this form.
         % Otherwise, for each alpha1 after p1 produced by m1, there'd be only a guarantee that some particular p2 * alpha2 is indistinguishable 
         %            from  p1 * alpha1.
 
@@ -398,13 +343,6 @@
           From the definition of attacker knowledge, there exists some $p_1'$ such that
           $\ftprod{c}{m_1}{p_1'}$ and $p_1' \indistinctD p_2 \cdot \alpha_2$.
 
-          % From the premise, we know that $\alpha$, $\alpha_1$, and $\alpha_2$ are all low-visible (non-silent) events. 
-          % Additionally, from determinism (NF.1), it
-          % follows that event produced from memory $m_1$ after $p_1$ will be unique.
-
-          % Therefore, since $\ftprod{c}{m_1}{p_1 \cdot \alpha_1}$, $\ftprod{c}{m_2}{p_2
-          %     \cdot \alpha_2}$, and $p_1 \indistinctD p_2$, it must be the case that $p_1' =
-          %   p_1 \cdot \alpha_1$.
           Since from premises $p_1 \indistinctD p_2$, it follows that $p_1 \indistinctD p_2 < p_2 \cdot \alpha_2 \indistinctD p_1' \implies p_1 <_{\DD} p_1'$ .
 
           % TODO: note, this uses a derived result from determinism that if a program + trace produces 2 finite traces, then one must be a prefix of the other
@@ -417,20 +355,6 @@
             \alpha_1 &= \alpha_2 \\
             \implies p_1 \cdot \alpha_1 &\indistinctD p_2 \cdot \alpha_2
           \end{align*}
-
-
-          % Since from premise, we have that $\ftprod{c}{m_1}{p_1 \cdot \alpha_1}$, it must be the case from determinism (\* consequence of NF1) that either $p_1 \cdot \alpha \leq p_1'$ or $p_1' \leq p_1 \cdot \alpha$.
-          
-
-          % \begin{tcolorbox}
-          %   Note: this last part of the lemma argues that since $c$ is deterministic and the traces produced by $m_1$
-          %   and $m_2$ are indistringuishable up to $p_1/p_2$ and the events that follow $p_1/p_2$ ($\alpha_1$ and
-          %   $\alpha_2$) must be non-silent: if there's some trace produced by $m_1$ indistringuishable from $p_2 \cdot \alpha_2$, it has to be $p_1 \cdot \alpha_1$. This is since the non-silence + indistinguishibility means
-          %   some visible event must occur immediately, and there is only one possible event produced because of determinism.
-
-          %   \vspace{2mm}
-          %   I'm not too sure if the current formulation above is a sufficiently rigorous way to write that out.
-          % \end{tcolorbox}
         \end{addmargin}
 
         % lemma with the main helpful consequence
@@ -571,5 +495,4 @@
           st_1)$ and $(m_2, st_2) \in \behav{c}$ are arbitrary, it follows that
         $\behav{c} \in \hlfp_\DD$, as desired.
 \end{enumerate}
-
 \end{document}

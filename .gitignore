@@ -1,1 +1,4 @@
-aux/
+aux/*
+!aux/*.pdf
+aux/*_old*.pdf
+*_old*.tex
