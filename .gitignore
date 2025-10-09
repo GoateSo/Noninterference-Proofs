@@ -2,3 +2,7 @@ out/*
 !out/*.pdf
 out/*_old*.pdf
 *_old*.tex
+
+*makefile*
+rocq/*
+!rocq/*.v
