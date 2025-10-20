@@ -53,11 +53,11 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
 
     (* TODO: note if possible use a more limited version of this. Current definition bakes in determinism *)
     Definition trace_pfx_prod (c : Cmd) (cs : Trace) :=
-      forall p, (le_trace p cs) <-> (iter_trace_prod (c, (t_input cs)) (p_events p)).
+      forall p, In Trace (behavior c) cs <-> ((le_trace p cs) <-> (iter_trace_prod (c, (t_input cs)) (p_events p))).
 
     (* TODO: note these might belong in theories instead of definitions *)
     Definition maximalization (p : TracePfx) :=
-      exists (t : Trace), le_trace p t.
+      exists (t : EvtStream), le_trace (p) (fst p, t).
   End Definitions.
 
   #[global] Notation "pfx '<=|' t" := (le_trace pfx t) (at level 80).

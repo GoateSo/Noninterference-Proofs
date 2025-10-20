@@ -95,10 +95,12 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     (* note2: defined currently using Props and <-> instead of sets and = *)
     Definition atk_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store :=
       fun m' => deq_store m m' 
-        /\ exists p', (iter_trace_prod (c, m') p /\ deq_evt_lst  p' p ).
+        /\ exists st', In Trace (behavior c) (m', st')
+        /\ exists p', (iter_trace_prod (c, m') p' /\ deq_evt_lst  p p' ).
     (* note: progress knowledge *)
     Definition prog_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store := 
       fun m' => deq_store m m' 
+        /\ exists st', In Trace (behavior c) (m', st')
         /\ exists p' a, (iter_trace_prod (c, m') p /\ deq_evt_lst p' (cons a p)) /\ ~ sil a.
   End Knowledge.
 
@@ -110,17 +112,17 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     Definition KPsniD : Ensemble Cmd :=
       fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
         -> ~ sil a
-        -> forall m', (In Store (atk_knowledge c m p) m') <-> (In Store (atk_knowledge c m (cons a p)) m').
+        -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (cons a p)).
 
     Definition KPiniD : Ensemble Cmd :=
       fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
         -> ~ sil a
-        -> forall m', (In Store (prog_knowledge c m p) m') <-> (In Store (atk_knowledge c m (cons a p)) m').
+        -> Same_set Store (prog_knowledge c m p) (atk_knowledge c m (cons a p)).
 
     Definition KLfpD : Ensemble Cmd :=
       fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
         -> ~ sil a
-        -> forall m', (In Store (atk_knowledge c m p) m') <-> (In Store (prog_knowledge c m (cons a p)) m').
+        -> Same_set Store (atk_knowledge c m p) (prog_knowledge c m p).
     
     Definition HPsniD : Hyperproperty :=
       fun t_set => forall t0 t1, (In Trace t_set t0) -> (In Trace t_set t1)
