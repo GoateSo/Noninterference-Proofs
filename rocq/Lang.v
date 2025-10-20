@@ -38,7 +38,9 @@ Module Type LangDefs.
     Inductive MultiStep : Cmd * Store -> Cmd * Store -> list Event -> Prop :=
       | MultiStep_refl : forall cs, cs ==>*[[]] cs
       | MultiStep_some : forall cs0 cs1 cs2 a lst,
-          cs0 -->[a] cs1 -> cs1 ==>*[lst] cs2 -> cs0 ==>*[a :: lst] cs2
+          cs0 ==>*[lst] cs1 -> 
+          cs1 -->[a] cs2 ->
+          cs0 ==>*[a :: lst] cs2
       where "cs0 '==>*[' lst ']' cs1" := (MultiStep cs0 cs1 lst) .
 
     (* note: iterated production *)
