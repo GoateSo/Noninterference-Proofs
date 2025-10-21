@@ -62,6 +62,7 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
 
   #[global] Notation "pfx '<=|' t" := (le_trace pfx t) (at level 80).
   #[global] Notation "pfx0 '<=,' pfx1" := (le_pfx pfx0 pfx1) (at level 80).
+  #[global] Notation "c '~~>' t" := (In Trace (behavior c) t) (at level 80).
 
   Section BasicProperties.
 

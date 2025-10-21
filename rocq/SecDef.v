@@ -95,12 +95,12 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     (* note2: defined currently using Props and <-> instead of sets and = *)
     Definition atk_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store :=
       fun m' => deq_store m m' 
-        /\ exists st', In Trace (behavior c) (m', st')
+        /\ exists st', c ~~> (m', st')
         /\ exists p', (iter_trace_prod (c, m') p' /\ deq_evt_lst  p p' ).
     (* note: progress knowledge *)
     Definition prog_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store := 
       fun m' => deq_store m m' 
-        /\ exists st', In Trace (behavior c) (m', st')
+        /\ exists st', c ~~> (m', st')
         /\ exists p' a, (iter_trace_prod (c, m') p /\ deq_evt_lst p' (cons a p)) /\ ~ sil a.
   End Knowledge.
 

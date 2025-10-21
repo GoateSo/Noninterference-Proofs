@@ -17,7 +17,7 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
     
     Axiom trace_pfx_production : forall c cs, trace_pfx_prod c cs.
     Axiom trace_max : forall p, maximalization p.
-    Axiom trace_max_prod : forall c m p st, (c, m)==>*[p] -> le_trace (m, p) (m, st) -> In Trace (behavior c) (m, st).
+    Axiom trace_max_prod : forall c m p st, (c, m)==>*[p] -> (m, p) <=| (m, st) -> c ~~> (m, st).
 
     Lemma prefix_prefix_prod : forall c a p m, (c, m) ==>*[a :: p] ->  (c, m) ==>*[p].
       unfold iter_trace_prod.
@@ -29,10 +29,10 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
     Qed.
 
     Definition indistincts (c : Cmd) (s : Store) : Ensemble Store :=
-      fun s' => deq_store s s'/\ exists t, In Trace (behavior c) (s', t).
+      fun s' => deq_store s s'/\ exists t, c ~~> (s', t).
 
     Lemma hpsni_indistinct_conseq : forall c, In Property HPsniD (behavior c)
-    -> forall s1 m1 s2 m2, In Trace (behavior c) (m1, s1) /\ In Trace (behavior c) (m2, s2)
+    -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
     -> deq_store m1 m2 <-> deq_store m1 m2 
           /\ (forall p1, (m1, p1) <=| (m1, s1) -> exists p2, (c, m2)==>*[p2] /\ deq_evt_lst p1 p2).
       split; intros.
@@ -42,15 +42,11 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
           destruct H0 as [Hcs1 Hcs2].
           pose proof (H (m1, s1) (m2, s2) Hcs1 Hcs2 H1) as PSNI'.
           intros p1 Hp1s1.
-          unfold deq_pfx in PSNI'.
-          pose proof (PSNI' (m1, p1) Hp1s1) as Hp2.
-          destruct Hp2 as [p2 Hp2].
-          destruct p2 as [m p2]. simpl in Hp2.
-          destruct Hp2 as [Hpfx [Hlst Hstore]].
+          pose proof (PSNI' (m1, p1) Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
           exists p2.
           split.
-          + pose proof (trace_pfx_production c (m2, s2) (m, p2)) as [Htprodl _].
-            destruct (Htprodl Hcs2).
+          + rewrite (trace_pfx_production c (m2, s2) (m, p2)) in Hcs2.
+            destruct Hcs2.
             auto.
           + assumption.
       - destruct H1.
@@ -59,60 +55,44 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
 
     Lemma hpsni_memset_invariance : forall c, 
     In Property HPsniD (behavior c) 
-    -> forall m st, In Trace (behavior c) (m, st)
+    -> forall m st, c ~~> (m, st)
     -> forall p', (m, p') <=| (m, st) -> Same_set Store (atk_knowledge c m p') (indistincts c m).
-      unfold Same_set, Included, indistincts, atk_knowledge, In.
       intros.
-      simpl.
-      pose proof (hpsni_indistinct_conseq c H st m) as Hpar_indist.
-      split; intros m' [Hdeq Hp]; split.
-      - assumption.
-      - destruct Hp.
-        destruct H2.
-        destruct H3.
-        destruct H3. 
-        pose proof (trace_max (m', x0)); unfold maximalization in H3; destruct H3.
-        exists x.
+      split; intros m' [Hdeq Ht]; split; trivial.
+      - destruct Ht as [t [Htprod [p'' Hpprod]]].
+        exists t.
         assumption.
-      - assumption.
-      - destruct Hp as [st' Hp].
-        assert (behavior c (m, st) /\ behavior c (m', st')) by auto.
-        pose proof (Hpar_indist st' m' H2) as [H_indistl H_indistr].
-        apply H_indistl in Hdeq.
-        destruct Hdeq as [Hdeq Hindist].
-        pose proof (Hindist p' H1) as [p'' Hp'].
-        exists st'.
-        auto.
+      - destruct Ht as [st' Hp].
+        apply (hpsni_indistinct_conseq c H st m st') in Hdeq. 
+          + destruct Hdeq as [Hdeq Hindist].
+            exists st'.
+            auto.
+          + auto.
     Qed.
     
-    Theorem Hpsni_impl_KPsni : forall c,
-    In Property HPsniD (behavior c)
-    -> In Cmd KPsniD c.
+    Theorem Hpsni_impl_KPsni : forall c, In Property HPsniD (behavior c) -> In Cmd KPsniD c.
       unfold HPsniD, KPsniD.
-      intros c HHPsniD p.
+      intros c HHPsniD p m a.
       intros.
-      pose proof (trace_pfx_production).
+      pose proof trace_pfx_production as Htraceprod.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
-        pose proof trace_max (m, p); unfold maximalization in H2.
-        destruct H2 as [st H2]; simpl in H2.
+        pose proof trace_max (m, p) as [st Htmaxpref].
+        apply prefix_prefix_prod in H.
         pose proof trace_max_prod c m p st as Hmaxprod.
         pose proof hpsni_memset_invariance c HHPsniD m st as Hminv.
-        pose proof (H1 c (m, st) (m, p)) as [Hprodl _].
-        apply prefix_prefix_prod in H.
-        pose proof Hminv (Hmaxprod H H2) p.
+        pose proof (Htraceprod c (m, st) (m, p)) as [Hprodl _].
+        pose proof Hminv (Hmaxprod H Htmaxpref) p.
         auto.
       }
       assert (Same_set Store (indistincts c m) (atk_knowledge c m (a :: p))). {
-        pose proof trace_max (m, a :: p). unfold maximalization in H3.
-        destruct H3 as [st H3]; simpl in H3.
+        pose proof trace_max (m, a :: p) as [st H3].
         pose proof trace_max_prod c m (a :: p) st as Hmaxprod.
         pose proof hpsni_memset_invariance c HHPsniD m st as Hminv.
-        pose proof (H1 c (m, st) (m, (a :: p))) as [Hprodl _].
+        pose proof (Htraceprod c (m, st) (m, (a :: p))) as [Hprodl _].
         pose proof Hminv (Hmaxprod H H3) (a :: p).
         auto with sets.
       }
-      pose proof (Same_set_trans Store (atk_knowledge c m p) (indistincts c m) (atk_knowledge c m (a :: p))).
-      auto.
+      auto using (Same_set_trans Store (atk_knowledge c m p) (indistincts c m) (atk_knowledge c m (a :: p))).
     Qed.
   End Core.
 End PSNI.
