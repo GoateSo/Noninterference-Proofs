@@ -31,7 +31,6 @@ Module Type LangDefs.
   Section Production.
     (* notation for single step progression *)
     Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50, no associativity).
-    Notation "cs1 '-/->'" := (no_step (fst cs1) (snd cs1)) (at level 50, no associativity).
 
     (* relation for multi-step progression w/ notation as well *)
     #[local] Reserved Notation "cs0 '==>*[' lst ']' cs1" (at level 50, no associativity).

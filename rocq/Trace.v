@@ -56,7 +56,7 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
       forall p, In Trace (behavior c) cs <-> ((le_trace p cs) <-> (iter_trace_prod (c, (t_input cs)) (p_events p))).
 
     (* TODO: note these might belong in theories instead of definitions *)
-    Definition maximalization (p : TracePfx) :=
+    Definition trace_pfx_maximize (p : TracePfx) :=
       exists (t : EvtStream), le_trace (p) (fst p, t).
   End Definitions.
 
@@ -76,6 +76,5 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
     Qed.
 
   End BasicProperties.
-
   #[global] Hint Resolve le_pfx_refl : core.
 End TraceDefs.
