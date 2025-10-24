@@ -23,17 +23,11 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
   (* TODO: add D as the paramater of deq and dle relations? *)
   Class DEquivalence := {
     D : Ensemble Label;
-    deq_evt : relation Event;
-    deq_evt_equiv : Equivalence deq_evt;
+    sil : Event -> Prop;
+    sil_dec : forall a, {sil a} + {~ sil a};
     
     deq_store : relation Store;
     deq_store_equiv : Equivalence deq_store;
-
-    deq_evt_lst : relation (list Event);
-    deq_evt_lst_equiv : Equivalence deq_evt_lst;
-
-    dle_evt_lst : relation (list Event);
-    dle_evt_lst_preorder : PreOrder dle_evt_lst; (* if a =[D] b,  [a] <=[D] [b] and [b] <=[D] [a] *)
   }.
 
   Parameter DE : DEquivalence.
@@ -42,11 +36,30 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
   Defined.
 
   Section MoreDEquivalence.
+    Fixpoint erase (lst : list Event): list Event :=
+      match lst with
+        | [] => []
+        | a :: rest => if sil_dec a 
+          then erase rest
+          else a :: (erase rest)
+      end.
+
+    Definition deq_evt_lst : relation (list Event) :=
+      fun l1 l2 => erase l1 = erase l2.
+
+    Definition dle_evt_lst : relation (list Event) :=
+      fun l1 l2 => Prefix (erase l1) (erase l2).
     (* properties of prefixes (combining event list and store properties) *)
     Definition deq_pfx : relation TracePfx := 
-      fun cs1 cs2 => deq_evt_lst (snd cs1) (snd cs2)  /\ deq_store (fst cs1) (fst cs2).
+      fun cs1 cs2 => deq_evt_lst (snd cs1) (snd cs2) /\ deq_store (fst cs1) (fst cs2).
 
-    Definition deq_pfx_equiv : Equivalence deq_pfx.
+    Definition dle_pfx : relation TracePfx :=
+      fun cs1 cs2 => dle_evt_lst (snd cs1) (snd cs2) /\ deq_store (fst cs1) (fst cs2).
+
+    Definition dlt_pfx : relation TracePfx :=
+      fun cs1 cs2 => dle_pfx cs1 cs2 /\ ~(deq_pfx cs1 cs2).
+
+    (* Definition deq_pfx_equiv : Equivalence deq_pfx.
       destruct deq_evt_lst_equiv.
       destruct deq_evt_lst_equiv as [RL SL TL].
       destruct deq_store_equiv as [RS SS TS].
@@ -60,9 +73,6 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
         + apply (TS s1 s2 s3); auto.
     Defined.
     
-    Definition dle_pfx : relation TracePfx :=
-      fun cs1 cs2 => dle_evt_lst (snd cs1) (snd cs2) /\ deq_store (fst cs1) (fst cs2).
-    
     Definition dle_pfx_preorder : PreOrder dle_pfx.
       destruct dle_evt_lst_preorder as [RL TL].
       destruct deq_store_equiv as [RS SS TS].
@@ -75,19 +85,7 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
         split.
         + apply (TL l1 l2 l3); auto.
         + apply (TS s1 s2 s3); auto.
-    Defined.
-
-    Definition dlt_pfx : relation TracePfx :=
-      fun cs1 cs2 => dle_pfx cs1 cs2 /\ ~(deq_pfx cs1 cs2).
-    (* TODO: define with partial order? *)
-
-    Definition silent c s :=
-      forall cs' lst, (c, s) ==>*[lst] cs' -> deq_evt_lst lst [].
-    
-    (* Note: since specific events (like NoEvt) aren't specified, this is defined in terms of list silence, instead of being the other way around *)
-    Definition sil a := deq_evt_lst [a] [].
-
-    (* TODO: possible defn/thrm that: forall a, ~(sil a) -> deq_evt_lst [a] [a]*)
+    Defined. *)
   End MoreDEquivalence.
   
   Section Knowledge.
