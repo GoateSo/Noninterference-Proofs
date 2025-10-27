@@ -1,2 +1,3 @@
 -R . NonInterference
-rocq/
+rocq/definitions/
+rocq/theories/

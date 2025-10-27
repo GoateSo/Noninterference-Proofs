@@ -4,5 +4,5 @@ out/*_old*.pdf
 *_old*.tex
 
 *makefile*
-rocq/*
-!rocq/*.v
+rocq/*/*
+!rocq/*/*.v
