@@ -1,16 +1,13 @@
-Require Import Basic.
-Require Import Lang.
-Require Import SecPol.
-Require Import Determinism.
+Require Import Basic Lang Determinism.
 Require Import SecDef SecPol Trace.
-Require Import BaseTheory.
+Require Import BaseTheory TraceTheories.
 Require Import SecTheory.
 
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
-Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD).
-  Import B BT LD TD Det SP SD ST.
+Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD) (TT : TraceTheories B LD TD Det).
+  Import B BT LD TD Det SP SD ST TT.
   Import LangNotations.
 
   Section Core.
@@ -20,13 +17,19 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     Axiom trace_max : forall p, trace_pfx_maximize p.
     Axiom trace_max_prod : forall c m p st, (c, m)==>*[p] -> (m, p) <=| (m, st) -> c ~~> (m, st).
 
-    Lemma prefix_prefix_prod : forall c a p m, (c, m) ==>*[a :: p] -> (c, m) ==>*[p].
+    Lemma prefix_prefix_prod : forall p' p, Prefix p' p -> forall c m,  (c, m) ==>*[p] -> (c, m) ==>*[p'].
       unfold iter_trace_prod.
-      intros.
-      destruct H.
-      inversion H.
-      exists cs1.
-      assumption.
+      intros ? ? HPref.
+      dependent induction HPref; intros.
+      - exists (c, m); apply MultiStep_refl.
+      - destruct H.
+        inversion H; subst.
+        destruct cs1 as [c' m'].
+        pose proof IHHPref c' m'.
+        destruct H0.
+        + exists x; apply H5.
+        + exists x0.
+          apply (MultiStep_some (c, m) (c', m') x0); assumption. 
     Qed.
 
     Definition indistincts (c : Cmd) (s : Store) : Ensemble Store :=
@@ -73,6 +76,13 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           + split; assumption.
     Qed.
     
+    Lemma app_prefix : forall (a : Event) p, Prefix p (p ++ [a]).
+      intros.
+      induction p.
+      - auto.
+      - apply Prefix_some, IHp.
+    Qed.
+
     Theorem Hpsni_impl_KPsni : forall c, In Property HPsniD (behavior c) -> In Cmd KPsniD c.
       unfold HPsniD, KPsniD.
       intros c HHPsniD p m a.
@@ -80,31 +90,23 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       pose proof trace_pfx_production as Htraceprod.
       pose proof (hpsni_memset_invariance c HHPsniD m) as Htmp.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
-        apply prefix_prefix_prod in H.
+        apply (prefix_prefix_prod p (p ++ [a]) (app_prefix a p)) in H.
         pose proof trace_max (m, p) as [st Htmaxpref].
         apply Htmp with st.
         - apply trace_max_prod with p; assumption.
         - assumption.
       }
-      assert (Same_set Store (indistincts c m) (atk_knowledge c m (a :: p))). {
-        pose proof trace_max (m, a :: p) as [st Htmaxpref].
+      assert (Same_set Store (indistincts c m) (atk_knowledge c m (p ++ [a]))). {
+        pose proof trace_max (m, p ++ [a]) as [st Htmaxpref].
         apply Same_set_sym.
         apply Htmp with st.
-        - apply trace_max_prod with (a :: p); assumption.
+        - apply trace_max_prod with (p ++ [a]); assumption.
         - assumption.  
       }
       apply Same_set_trans with (indistincts c m); assumption.
     Qed.
     
     (* ------------------ KPSNI + DET ==> HPSNI  ------------------ *)    
-    Lemma foo : forall m a p s, (m, (a :: p)) <=| (m, s) -> (m, p) <=| (m, s).
-      intros.
-      apply LeTrace_intro.
-      inversion H; subst.
-      inversion H1; subst.
-    Admitted.
-      
-
     Lemma kpsni_indistinct_conseq : forall c, In Cmd KPsniD c
     -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
     -> deq_store m1 m2 <-> deq_store m1 m2 
@@ -114,17 +116,16 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       split; intros.
       - split; trivial.
         intros.
+        admit.
+        (* intros.
         induction p1.
         + exists []; split.
           * exists (c, m2). apply MultiStep_refl.
           * unfold deq_evt_lst.
             reflexivity.
-        + pose proof (trace_pfx_production c (m1, s1) (m1, (a :: p1))) as [Ha _].
+        + pose proof (trace_pfx_production c (m1, s1) (m1, (p1 ++ [a]))) as [Ha _].
           unfold deq_evt_lst, erase. 
-          assert ((m1, p1) <=| (m1, s1)). {
-            apply foo in H0.
-            assumption.
-          }
+          assert ((m1, p1) <=| (m1, s1)) by admit.
           apply IHp1 in H1.
           destruct H1 as [p2 [Hp2a Hp2b]].
           destruct (sil_dec a).
@@ -138,7 +139,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           * simpl in Ha. 
             rewrite (Ha Hdp1) in H0.
             destruct (HKPsni p1 m1 a); auto.
-            unfold  Included, In, atk_knowledge in H1. 
+            unfold Included, In, atk_knowledge in H1. 
             pose proof H1 m2.
             destruct H3. {
               split; trivial.
@@ -154,8 +155,8 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             destruct (sil_dec a).
             contradiction.
             rewrite (non_silent_erasure a p1 n0) in Hdeqp.
-            assumption.
+            assumption. *)
       - destruct H; assumption. 
-   Qed.  
+   Admitted.  
   End Core.
 End PSNI.
