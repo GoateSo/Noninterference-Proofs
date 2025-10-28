@@ -7,15 +7,16 @@ Class EqDec (A : Type) := {
 
 (* The typeclass abstracting over a language's small-step semantics. *)
 Class LanguageSemantics := {
-  Cmd : Type;   (* languages must have a set of commands*)
-  Store : Type; (* languages must have a concept of memory stores*)
-  Event : Type; (* languages must have a concept of events produced by progression (including no events)*)
+  Cmd : Type;
+  Store : Type;
+  Event : Type; 
 
   (* decideability of command/store/event equality *)
   cmd_eq_dec : EqDec Cmd; 
   mem_eq_dev : EqDec Store;
   evt_eq_dec : EqDec Event;
-  (* progess (Event encompasses possible NoEvt) : <c,s> --a-> <c', s'>*)
+  
+  (* progess : <c,s> --a-> <c', s'>*)
   steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
   (* no step (gets stuck or terminates): <c,s> --/-> *)
   no_step : Cmd -> Store -> Prop

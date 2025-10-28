@@ -58,34 +58,6 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
 
     Definition dlt_pfx : relation TracePfx :=
       fun cs1 cs2 => dle_pfx cs1 cs2 /\ ~(deq_pfx cs1 cs2).
-
-    (* Definition deq_pfx_equiv : Equivalence deq_pfx.
-      destruct deq_evt_lst_equiv.
-      destruct deq_evt_lst_equiv as [RL SL TL].
-      destruct deq_store_equiv as [RS SS TS].
-      split; unfold deq_pfx.
-      - auto.
-      - intros [s1 l1] [s2 l2] [H1 H2].
-        auto.
-      - intros [s1 l1] [s2 l2] [s3 l3] [H1 H2] [H3 H4].
-        split.
-        + apply (TL l1 l2 l3); auto.
-        + apply (TS s1 s2 s3); auto.
-    Defined.
-    
-    Definition dle_pfx_preorder : PreOrder dle_pfx.
-      destruct dle_evt_lst_preorder as [RL TL].
-      destruct deq_store_equiv as [RS SS TS].
-      split; unfold dle_pfx.
-      - auto.
-      - unfold Transitive.
-        intros [s1 l1] [s2 l2] [s3 l3].
-        simpl.
-        intros [H1 H2] [H3 H4].
-        split.
-        + apply (TL l1 l2 l3); auto.
-        + apply (TS s1 s2 s3); auto.
-    Defined. *)
   End MoreDEquivalence.
   
   Section Knowledge.

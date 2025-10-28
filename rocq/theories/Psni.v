@@ -3,14 +3,14 @@ Require Import Lang.
 Require Import SecPol.
 Require Import Determinism.
 Require Import SecDef SecPol Trace.
-Require Import Grounding.
+Require Import BaseTheory.
 Require Import SecTheory.
 
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
-Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD).
-  Import B G LD TD Det SP SD ST.
+Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD).
+  Import B BT LD TD Det SP SD ST.
   Import LangNotations.
 
   Section Core.
@@ -99,8 +99,9 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
     (* ------------------ KPSNI + DET ==> HPSNI  ------------------ *)    
     Lemma foo : forall m a p s, (m, (a :: p)) <=| (m, s) -> (m, p) <=| (m, s).
       intros.
-      inversion H.
-      auto.
+      apply LeTrace_intro.
+      inversion H; subst.
+      inversion H1; subst.
     Admitted.
       
 
@@ -149,12 +150,12 @@ Module Type PSNI (B : Basic) (G : GroundTheories B) (LD : LangDefs) (TD : TraceD
             destruct H4 as [st' [Hprod [p' [Hpp Hdeqp]]]].
             exists p'.
             split; trivial.
-            unfold deq_evt_lst, erase in Hdeqp.
+            unfold deq_evt_lst in Hdeqp.
             destruct (sil_dec a).
             contradiction.
+            rewrite (non_silent_erasure a p1 n0) in Hdeqp.
             assumption.
-      - destruct H.
-        assumption. 
-    Admitted.  
+      - destruct H; assumption. 
+   Qed.  
   End Core.
 End PSNI.

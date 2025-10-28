@@ -8,7 +8,6 @@ Class DecideIn {A : Type} (S : Ensemble A) := {
   dec_in : forall a, {In A S a} + {~ In A S a}
 }.
 
-
 (* Security policy class (labels)*)
 Class LabelOrder (Label : Set) := {
   flows_to : Label -> Label -> Prop;

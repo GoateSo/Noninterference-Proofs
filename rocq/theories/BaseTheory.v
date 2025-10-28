@@ -2,7 +2,7 @@ Require Import Basic.
 From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles.
 Import ListNotations.
 
-Module Type GroundTheories (B : Basic).
+Module Type BaseTheories (B : Basic).
   Import B.
 
   Section SameSet.
@@ -46,10 +46,6 @@ Module Type GroundTheories (B : Basic).
       split; apply Included_trans with B; auto.
     Qed.
   End SameSet.
-
-  Hint Resolve Same_set_refl : sets.
-  Hint Resolve Same_set_sym : sets.
-  Hint Resolve Same_set_trans : sets.
 
   Section NatProps.
 
@@ -178,4 +174,4 @@ Module Type GroundTheories (B : Basic).
       * apply f_equal. eauto.
     Qed.
   End ListPrefix.
-End GroundTheories.
+End BaseTheories.
