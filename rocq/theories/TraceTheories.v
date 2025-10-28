@@ -123,12 +123,14 @@ Module Type TraceTheories  (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD
     - destruct (step_exclusive c s); split; eauto.
   Qed.
 
-  (* Lemma prod_conv_prefix : forall lst st, EvtPrefix lst st
-      -> forall c s s' lst', (c, s) ==>*[lst'] (Stop, s')
+  Lemma prod_conv_prefix : forall lst st, EvtPrefix lst st
+      -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ no_step c' s'
       -> Produces c s st
       -> Prefix lst lst'.
-    intros lst st EvtPfx. induction EvtPfx ; intros c s s' lst' Conv Prod ; auto.
-    inversion Prod ; subst ; inversion Conv ; subst ; [handle_simple_contradict | subst_eq_steps].
-    eauto.
-  Qed. *)
+      intros lst st EvtPfx. induction EvtPfx ; intros c s c' s' lst' Conv Prod ; auto.
+      inversion Prod; subst; destruct Conv as [Conv Hend]; inversion Conv; subst.
+      - destruct (step_exclusive c' s'); split; eauto.
+      - subst_eq_steps.
+        eauto.
+  Qed.
 End TraceTheories.

@@ -93,12 +93,8 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP
         - intros [s1 l1] [s2 l2] [s3 l3] [H1 H2] [H3 H4].
           unfold Transitive in Hdst.
           split.
-          + apply (deq_evt_lst_trans l1 l2 l3) in H1. 
-            * apply H1.
-            * apply H3.
-          + apply (Hdst s1 s2 s3) in H2.
-            * apply H2.
-            * apply H4.
+          + apply (deq_evt_lst_trans l1 l2 l3) in H1; [exact H1 | exact H3]. 
+          + apply (Hdst s1 s2 s3) in H2; [exact H2 | exact H4].
     Defined. 
     
     Instance dle_pfx_preorder : PreOrder dle_pfx.
