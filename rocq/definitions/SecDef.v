@@ -1,6 +1,4 @@
-Require Import Basic.
-Require Import Lang.
-Require Import Trace.
+Require Import Basic Lang Trace.
 Require Import SecPol.
 
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.

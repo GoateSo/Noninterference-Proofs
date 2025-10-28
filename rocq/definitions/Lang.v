@@ -1,4 +1,4 @@
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
+From Coq Require Import Basics Equality List.
 Import ListNotations.
 
 Class EqDec (A : Type) := {

@@ -1,13 +1,8 @@
-Require Import Basic.
-Require Import Lang.
-Require Import SecPol.
-Require Import Determinism.
-Require Import SecDef SecPol Trace.
+Require Import Basic Lang Determinism.
+Require Import SecPol SecDef Trace.
 Require Import BaseTheory.
-From Coq Require Import Equality Relations RelationClasses List Compare.
-Import ListNotations.
-
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
+Import ListNotations.
 
 Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (SD : SecurityDefs B LD TD SP) .
   Import B LD TD SP SD.

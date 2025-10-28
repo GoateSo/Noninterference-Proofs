@@ -48,7 +48,6 @@ Module Type BaseTheories (B : Basic).
   End SameSet.
 
   Section NatProps.
-
     Theorem strong_ind : forall P : nat -> Prop,
         (forall m : nat, (forall n : nat, n < m -> P n) -> P m)
         -> forall n : nat, P n.
@@ -85,7 +84,6 @@ Module Type BaseTheories (B : Basic).
         - apply le_S_n in ltn, ltm1. pose proof (IHm0 m1 ltm1 n ltn).
           simpl. assumption.
     Qed.
-
   End NatProps.
 
   Section ListPrefix.

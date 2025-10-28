@@ -1,11 +1,9 @@
-From Coq Require Import Equality Relations RelationClasses List Compare.
+From Coq Require Import Equality Relations RelationClasses List.
 
 Import ListNotations.
 
 Module Type Basic.
-
   Section ListPrefix.
-
     Context {A : Type}.
 
     Inductive Prefix : relation (list A) :=
@@ -30,5 +28,4 @@ Module Type Basic.
 
   #[global] Hint Resolve Prefix_empty : core.
   #[global] Hint Resolve Prefix_some : core.
-
 End Basic.

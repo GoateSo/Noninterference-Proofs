@@ -1,7 +1,6 @@
-Require Import Basic.
-Require Import Lang.
+Require Import Basic Lang.
 
-From Coq Require Import RelationClasses List Basics Equality Relations Ensembles.
+From Coq Require Import List Basics Equality Relations Ensembles.
 
 Import ListNotations.
 
@@ -45,7 +44,6 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
     CoInductive Produces : Cmd -> Store -> EvtStream -> Prop :=
       | Produces_step : forall c s a c' s' st, (c, s) -->[a] (c', s')
         -> Produces c' s' st -> Produces c s (ConsEvt a st)
-        (* NOTE: this is quite different from the existing definition that has 'Stop' specifically instead of a forall c. This new definition is made to include all cases where a program gets stuck as well *)
       | No_production : forall c s, no_step c s -> Produces c s NoProgress.
 
     Definition behavior (c : Cmd) : Property :=

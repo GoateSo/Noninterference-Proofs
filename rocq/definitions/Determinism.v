@@ -1,9 +1,4 @@
-Require Import Basic.
-Require Import Lang.
-
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
-Import ListNotations.
-
+Require Import Basic Lang.
 Module Type DeterminismDef (LD : LangDefs).
     Import LD.
     Import LangNotations.
