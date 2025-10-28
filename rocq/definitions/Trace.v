@@ -63,7 +63,6 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
   #[global] Notation "c '~~>' t" := (In Trace (behavior c) t) (at level 80).
 
   Section BasicProperties.
-
     Lemma le_pfx_refl : forall pfx : TracePfx, pfx <=, pfx.
       induction pfx. apply LePfx_intro ; reflexivity.
     Qed.
@@ -72,7 +71,6 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
       intros pfx0 pfx1 pfx2 Le01 Le12. dependent induction Le01. dependent induction Le12.
       apply LePfx_intro ; transitivity lst1 ; assumption.
     Qed.
-
   End BasicProperties.
   #[global] Hint Resolve le_pfx_refl : core.
 End TraceDefs.

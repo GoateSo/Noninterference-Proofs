@@ -20,7 +20,6 @@ Class LanguageSemantics := {
   (* no step (gets stuck or terminates): <c,s> --/-> *)
   steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
   no_step : Cmd -> Store -> Prop;
-  step_decide : forall c s, {exists c' s' a, steps_to c s a c' s'} + {no_step c s};
   step_exclusive : forall c s, ~((exists c' s' a, steps_to c s a c' s') /\ (no_step c s));
 }.
 
