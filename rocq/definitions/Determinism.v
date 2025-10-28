@@ -10,6 +10,6 @@ Module Type DeterminismDef (LD : LangDefs).
     Section Determinism.
         Definition one_step_det cs :=
             forall cs1 cs2 a1 a2,
-                cs -->[a1] cs1 -> cs -->[a2] cs2 -> (a1 = a2) /\ (cs1 = cs2).
+                cs -->[a1] cs1 -> cs -->[a2] cs2 -> (cs1 = cs2) /\ (a1 = a2).
     End Determinism.
 End DeterminismDef.
