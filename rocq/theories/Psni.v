@@ -115,48 +115,43 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       unfold KPsniD, In in HKPsni.
       split; intros.
       - split; trivial.
-        intros.
-        admit.
-        (* intros.
-        induction p1.
-        + exists []; split.
-          * exists (c, m2). apply MultiStep_refl.
-          * unfold deq_evt_lst.
-            reflexivity.
-        + pose proof (trace_pfx_production c (m1, s1) (m1, (p1 ++ [a]))) as [Ha _].
-          unfold deq_evt_lst, erase. 
-          assert ((m1, p1) <=| (m1, s1)) by admit.
-          apply IHp1 in H1.
-          destruct H1 as [p2 [Hp2a Hp2b]].
-          destruct (sil_dec a).
-          * apply (silent_indistinct c m1 a p1) in s.
-            unfold Same_set, Included, In, atk_knowledge in s.
-            destruct s as [Hpsubap Hapsubp].
-            inversion H0.
-            exists p2.
-            unfold deq_evt_lst, erase.
-            split; trivial.
-          * simpl in Ha. 
-            rewrite (Ha Hdp1) in H0.
-            destruct (HKPsni p1 m1 a); auto.
-            unfold Included, In, atk_knowledge in H1. 
-            pose proof H1 m2.
-            destruct H3. {
-              split; trivial.
-              exists s2.
-              split; trivial.
-              exists p2.
+        apply (rev_ind (fun p1 => (m1, p1) <=| (m1, s1) -> exists p2, (c,m2)==>*[p2] /\ deq_evt_lst p1 p2)); intros.
+        + exists []; split; auto.
+          exists (c, m2); apply MultiStep_refl. apply deq_evt_lst_refl.
+        + inversion H1; subst.
+          unfold deq_evt_lst.
+          assert (EvtPrefix l s1) by eauto using (app_prefix x l), lst_prefix_stream_prefix.
+          apply (LeTrace_intro m1) in H2.
+          apply H0 in H2.
+          destruct H2 as [p2 [Hp2Prod Hp2Deq]].
+          rewrite silent_split; simpl.
+          destruct (sil_dec x).
+            * exists p2.
+              split; [assumption|].
+              unfold deq_evt_lst in Hp2Deq.
+              rewrite app_nil_r.
+              assumption.
+            * pose proof trace_pfx_production c (m1, s1) (m1, l ++ [x]) as Hpfxprod.
+              simpl in Hpfxprod.
+              pose proof Hdp1 as Hdp1cp.
+              rewrite Hpfxprod in Hdp1.
+              rewrite Hdp1 in H1.
+              destruct (HKPsni l m1 x); [assumption | assumption |].
+              unfold Included, In, atk_knowledge in H2.
+              pose proof H2 m2 as H2ak.
+              destruct H2ak. {
+                split; [assumption | ].
+                exists s2.
+                split; [| exists p2; split]; assumption. 
+              }
+              intros.
+              destruct H6 as [st' [Htprod [p' [Hpprod Hpeq]]]].
+              unfold deq_evt_lst in Hpeq.
+              rewrite silent_split in Hpeq. simpl in Hpeq.
+              destruct (sil_dec x); [contradiction |].
+              exists p'.
               auto.
-            }
-            destruct H4 as [st' [Hprod [p' [Hpp Hdeqp]]]].
-            exists p'.
-            split; trivial.
-            unfold deq_evt_lst in Hdeqp.
-            destruct (sil_dec a).
-            contradiction.
-            rewrite (non_silent_erasure a p1 n0) in Hdeqp.
-            assumption. *)
       - destruct H; assumption. 
-   Admitted.  
+    Qed.  
   End Core.
 End PSNI.
