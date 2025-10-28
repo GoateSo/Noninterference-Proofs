@@ -16,10 +16,12 @@ Class LanguageSemantics := {
   mem_eq_dev : EqDec Store;
   evt_eq_dec : EqDec Event;
   
-  (* progess : <c,s> --a-> <c', s'>*)
-  steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
+  (* progess : <c,s> --a-> <c', s'> *)
   (* no step (gets stuck or terminates): <c,s> --/-> *)
-  no_step : Cmd -> Store -> Prop
+  steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
+  no_step : Cmd -> Store -> Prop;
+  step_decide : forall c s, {exists c' s' a, steps_to c s a c' s'} + {no_step c s};
+  step_exclusive : forall c s, ~((exists c' s' a, steps_to c s a c' s') /\ (no_step c s));
 }.
 
 Module Type LangDefs.
@@ -38,8 +40,8 @@ Module Type LangDefs.
     Inductive MultiStep : Cmd * Store -> Cmd * Store -> list Event -> Prop :=
       | MultiStep_refl : forall cs, cs ==>*[[]] cs
       | MultiStep_some : forall cs0 cs1 cs2 a lst,
-          cs0 ==>*[lst] cs1 -> 
-          cs1 -->[a] cs2 ->
+          cs0 -->[a] cs1 ->
+          cs1 ==>*[lst] cs2 -> 
           cs0 ==>*[a :: lst] cs2
       where "cs0 '==>*[' lst ']' cs1" := (MultiStep cs0 cs1 lst) .
 

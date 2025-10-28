@@ -71,7 +71,7 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     Definition prog_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store := 
       fun m' => deq_store m m' 
         /\ exists st', c ~~> (m', st')
-        /\ exists p' a, (iter_trace_prod (c, m') p /\ deq_evt_lst p' (cons a p)) /\ ~ sil a.
+        /\ exists p' a, (iter_trace_prod (c, m') p /\ deq_evt_lst p' (p ++ [a])) /\ ~ sil a.
   End Knowledge.
 
   Section Progress.
@@ -80,17 +80,17 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
 
   Section NonInterference.
     Definition KPsniD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
+      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
         -> ~ sil a
-        -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (cons a p)).
+        -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
 
     Definition KPiniD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
+      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
         -> ~ sil a
-        -> Same_set Store (prog_knowledge c m p) (atk_knowledge c m (cons a p)).
+        -> Same_set Store (prog_knowledge c m p) (atk_knowledge c m (p ++ [a])).
 
     Definition KLfpD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (cons a p) 
+      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
         -> ~ sil a
         -> Same_set Store (atk_knowledge c m p) (prog_knowledge c m p).
     
