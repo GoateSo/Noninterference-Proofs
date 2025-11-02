@@ -5,12 +5,14 @@ Import ListNotations.
 Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import B LD TD.
   Import LangNotations.
-  
+
   (* defn: to produce a trace means producing all finite prefixes of it *)
   (* addn from determinism: if a trace prefix is produced by the program, then it must be a prefix of the list *)
   Axiom trace_pfx_production : forall c m st, c ~~> (m, st) <-> (forall p, (m, p) <=| (m, st) <-> (c, m) ==>*[p]).
   (* any finite trace prefix can be expanded to an infinite trace *)
   Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
+  (* all configurations produce a trace *)
+  Axiom univ_production : forall c m, exists st, c ~~> (m, st).
 
   Theorem produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> can_step c s.
     intros.

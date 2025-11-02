@@ -28,9 +28,6 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           apply (MultiStep_some (c, m) (c', m') x0); assumption. 
     Qed.
 
-    Definition indistincts (c : Cmd) (s : Store) : Ensemble Store :=
-      fun s' => deq_store s s'/\ exists t, c ~~> (s', t).
-
     (* ------------------ KPSNI <=== HPSNI  ------------------ *)
     Lemma hpsni_indistinct_conseq : forall c, In Property HPsniD (behavior c)
     -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
@@ -59,15 +56,15 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     In Property HPsniD (behavior c) 
     -> forall m st, c ~~> (m, st)
     -> forall p', (m, p') <=| (m, st) -> Same_set Store (atk_knowledge c m p') (indistincts c m).
-      intros.
-      split; intros m' [Hdeq Ht]; split; trivial.
-      - destruct Ht as [t [Htprod _]].
-        exists t; assumption.
-      - destruct Ht as [st' Hp].
-        apply (hpsni_indistinct_conseq c H st m st') in Hdeq. 
-          + destruct Hdeq as [Hdeq Hindist].
-            exists st'.
-            auto.
+      unfold Included.
+      split; intros m' Hin.
+      - destruct Hin as [Hdeq _]; assumption.
+      - pose proof univ_production c m' as [st' Hprod].
+        pose proof hpsni_indistinct_conseq c H st m st' m'.
+        destruct H2; [split; assumption |].
+        unfold In, indistincts in Hin.
+        apply (hpsni_indistinct_conseq c H st m st') in Hin. 
+          + destruct Hin. split; auto.
           + split; assumption.
     Qed.
     
@@ -123,8 +120,8 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             destruct (HKPsni l m1 x) as [H4 _]; [assumption | assumption |].
             unfold Included, In, atk_knowledge in H4.
             pose proof H4 m2 as H4ak; clear H4.
-            destruct H4ak as [_ [st' [Htprod [p' [Hpprod Hpeq]]]]]. {
-              split; [assumption | exists s2].
+            (* pose proof univ_production c m2 as [s2 _]. *)
+            destruct H4ak as [Htprod [p' [Hpprod Hpeq]]]. {
               split; [| exists p2; split]; assumption. 
             }
             unfold deq_evt_lst in Hpeq.
@@ -140,12 +137,10 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       unfold det_rel, steps_to_combined, KPsniD, In, HPsniD.
       intros ? HKPsniD one_step_det [m1 st1] [m2 st2] ? ? ? p1 Hpsub.
       destruct (kpsni_indistinct_conseq c HKPsniD st1 m1 st2 m2) as [Hl _]; [eauto| ].
-      apply Hl in H1.
-      destruct H1 as [Hindist Hprod].
+      apply Hl in H1  as [Hindist Hprod].
       destruct p1 as [mp1 p1].
       inversion Hpsub; subst.
-      pose proof Hprod p1.
-      apply H1 in Hpsub.
+      apply (Hprod p1) in Hpsub.
       destruct Hpsub as [p2 [Hp2prod Hp2deq]].
       pose proof trace_max c m2 p2 Hp2prod as [stp2 [Hp2pfx Ht2prod]].
       exists (m2, p2).

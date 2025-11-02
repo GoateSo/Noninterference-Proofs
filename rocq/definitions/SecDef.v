@@ -34,6 +34,9 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
   Defined.
 
   Section MoreDEquivalence.
+    Definition indistincts (c : Cmd) (s : Store) : Ensemble Store :=
+      fun s' => deq_store s s'.
+
     Fixpoint erase (lst : list Event): list Event :=
       match lst with
         | [] => []
@@ -62,14 +65,12 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     (* note: attacker knowledge *)
     (* note2: defined currently using Props and <-> instead of sets and = *)
     Definition atk_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store :=
-      fun m' => deq_store m m' 
-        /\ exists st', c ~~> (m', st')
-        /\ exists p', (iter_trace_prod (c, m') p' /\ deq_evt_lst  p p' ).
+      fun m' => deq_store m m'
+        /\ exists p', ((c, m')==>*[p'] /\ deq_evt_lst  p p').
     (* note: progress knowledge *)
     Definition prog_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store := 
       fun m' => deq_store m m' 
-        /\ exists st', c ~~> (m', st')
-        /\ exists p' a, (iter_trace_prod (c, m') p /\ deq_evt_lst p' (p ++ [a])) /\ ~ sil a.
+        /\ exists p' a, ((c, m')==>*[p] /\ deq_evt_lst p' (p ++ [a])) /\ ~ sil a.
   End Knowledge.
 
   Section Progress.
@@ -78,17 +79,17 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
 
   Section NonInterference.
     Definition KPsniD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
+      fun c => forall p m a,  (c, m)==>*[p ++ [a]] 
         -> ~ sil a
         -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
 
     Definition KPiniD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
+      fun c => forall p m a, (c, m)==>*[p ++ [a]] 
         -> ~ sil a
         -> Same_set Store (prog_knowledge c m p) (atk_knowledge c m (p ++ [a])).
 
     Definition KLfpD : Ensemble Cmd :=
-      fun c => forall p m a, iter_trace_prod (c, m) (p ++ [a]) 
+      fun c => forall p m a, (c, m)==>*[p ++ [a]] 
         -> ~ sil a
         -> Same_set Store (atk_knowledge c m p) (prog_knowledge c m p).
     

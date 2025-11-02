@@ -12,23 +12,17 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP
     Theorem silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
       intros.
       induction l1 ; [reflexivity|].
-      simpl; destruct (sil_dec a); auto.
+      simpl; destruct (sil_dec a); try assumption.
       rewrite IHl1.
       reflexivity.
     Qed.
 
     Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
-      unfold Same_set, Included, In, atk_knowledge, deq_evt_lst.
       intros.
-      split; split; destruct H0; trivial; destruct H1 as [st' [Ha [p' [Hprod Hdeq]]]].
-      - exists st'; split; trivial.
-        exists p'; split; trivial.
-        rewrite silent_split; simpl.
+      split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
+      - rewrite silent_split; simpl.
         destruct (sil_dec a); rewrite Hdeq; [auto using app_nil_r | contradiction].
-      - exists st'; split; trivial.
-        exists p'; split; trivial.
-        simpl in Hdeq.
-        rewrite <-Hdeq; simpl; rewrite silent_split; simpl.
+      - rewrite <-Hdeq; simpl; rewrite silent_split; simpl.
         destruct (sil_dec a); [auto using app_nil_r | contradiction].
     Qed.
   End SilentProperties.
