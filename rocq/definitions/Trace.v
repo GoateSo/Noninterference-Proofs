@@ -4,7 +4,6 @@ From Coq Require Import List Basics Equality Relations Ensembles.
 
 Import ListNotations.
 
-(* TODO: maybe clean up how traces group up stores and event lists/streams *)
 Module Type TraceDefs (B : Basic) (LD : LangDefs).
   Import B LD.
   Import LangNotations.
@@ -13,6 +12,17 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
     CoInductive EvtStream :=
       | ConsEvt (a : Event) (st : EvtStream) : EvtStream
       | NoProgress : EvtStream. (* termination or stuck *)
+
+    CoInductive Eq_EvtSt : EvtStream -> EvtStream -> Prop := 
+      | evts_eq_nil : Eq_EvtSt NoProgress NoProgress
+      | evts_eq_cons : forall (h1 h2 : Event) (t1 t2 : EvtStream),
+        h1 = h2 ->
+        Eq_EvtSt t1 t2 ->
+        Eq_EvtSt (ConsEvt h1 t1) (ConsEvt h2 t2).
+
+    (* Definition getNext c s (proof : can_step c s) : nat := match proof with
+      |  ex_intro _ a b  => 
+    end. *)
 
     Inductive EvtPrefix : list Event -> EvtStream -> Prop :=
       | EvtPrefix_empty : forall st, EvtPrefix [] st
@@ -44,18 +54,10 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
     CoInductive Produces : Cmd -> Store -> EvtStream -> Prop :=
       | Produces_step : forall c s a c' s' st, (c, s) -->[a] (c', s')
         -> Produces c' s' st -> Produces c s (ConsEvt a st)
-      | No_production : forall c s, no_step c s -> Produces c s NoProgress.
+      | No_production : forall c s, ~can_step c s -> Produces c s NoProgress.
 
     Definition behavior (c : Cmd) : Property :=
       (fun t => Produces c (fst t) (snd t)).
-
-    (* TODO: note if possible use a more limited version of this. Current definition bakes in determinism *)
-    Definition trace_pfx_prod (c : Cmd) (cs : Trace) :=
-      forall p, In Trace (behavior c) cs <-> ((le_trace p cs) <-> (iter_trace_prod (c, (t_input cs)) (p_events p))).
-
-    (* TODO: note these might belong in theories instead of definitions *)
-    Definition trace_pfx_maximize (p : TracePfx) :=
-      exists (t : EvtStream), le_trace (p) (fst p, t).
   End Definitions.
 
   #[global] Notation "pfx '<=|' t" := (le_trace pfx t) (at level 80).

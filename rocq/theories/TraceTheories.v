@@ -1,12 +1,22 @@
-Require Import Basic Lang Trace Determinism.
+Require Import Basic Lang Trace.
 From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles.
 Import ListNotations.
 
-Module Type TraceTheories  (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : DeterminismDef LD).
-  Import B LD TD DD.
+Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
+  Import B LD TD.
   Import LangNotations.
+  
+  (* defn: to produce a trace means producing all finite prefixes of it *)
+  (* addn from determinism: if a trace prefix is produced by the program, then it must be a prefix of the list *)
+  Axiom trace_pfx_production : forall c m st, c ~~> (m, st) <-> (forall p, (m, p) <=| (m, st) <-> (c, m) ==>*[p]).
+  (* any finite trace prefix can be expanded to an infinite trace *)
+  Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
 
-  Axiom deterministic : forall cs, one_step_det cs.
+  Theorem produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> can_step c s.
+    intros.
+    unfold can_step.
+    eauto.
+  Qed.
 
   Lemma lst_prefix_stream_prefix : forall lst0 lst1, Prefix lst0 lst1 -> forall st, EvtPrefix lst1 st -> EvtPrefix lst0 st.
     intros lst0 lst1 LstPfx. induction LstPfx ; intros st EvtPfx ; [| inversion EvtPfx] ; eauto using EvtPrefix.
@@ -57,25 +67,31 @@ Module Type TraceTheories  (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD
     assert (Prefix lst0 lst1 \/ Prefix lst1 lst0) as [|] by eauto using pfx_from_same_trace_leq_help ; auto using LePfx_intro.
   Qed.
 
+  Ltac handle_prog_contradict :=
+    lazymatch goal with
+      | [H : (~ (can_step ?c ?s)), H1 : (steps_to ?c ?s ?e ?c' ?s') |- _] => apply produce_impl_canstep in H1; contradiction
+    end.
+
+  (* note: below theories are conditioned on determinism used in subst_eq_steps *)
+  (* 
   Lemma deterministic_step : forall cs cs1 a1,
         cs -->[a1] cs1 -> forall cs2 a2, cs -->[a2] cs2 -> cs1 = cs2 /\ a1 = a2.
       intros cs cs1 a1 Step1 ? ? ?.
       pose proof (deterministic cs cs1 cs2 a1 a2).
       apply H0; assumption.
   Qed.
-
   Ltac subst_eq_steps :=
     repeat lazymatch goal with
       | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
       | [H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
-        => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using deterministic_step ; subst ; clear H1
+        => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using deterministic_step ; subst ; clear H1 
     end.
 
   Lemma evt_prefix_prod_both : forall lst st0, EvtPrefix lst st0 -> forall c s st1, Produces c s st0 -> Produces c s st1 -> EvtPrefix lst st1.
     intros lst st0 EvtPfx. induction EvtPfx ; intros c s st1 Prod0 Prod1 ; auto using EvtPrefix_empty.
     inversion Prod0 ; inversion Prod1 ; subst; subst_eq_steps.
     - eauto using EvtPrefix_some.
-    - destruct (step_exclusive c s); split; eauto.
+    - handle_prog_contradict.
   Qed.
 
   Lemma pfx_prod_both : forall pfx s st0, pfx <=| (s, st0) -> forall c st1, Produces c s st0 -> Produces c s st1 -> pfx <=| (s, st1).
@@ -92,7 +108,7 @@ Module Type TraceTheories  (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD
     - subst_eq_steps.
       assert (exists st', Produces c1 s1 (prepend lst st')) as [st' ?] by eauto.
       eauto using Produces_step.
-    - destruct (step_exclusive c s); split; eauto.
+    - handle_prog_contradict.
   Qed. 
 
   Lemma prod_prepend_mstep : forall c s c' s' lst, (c, s) ==>*[lst] (c', s')
@@ -120,17 +136,17 @@ Module Type TraceTheories  (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD
     inversion MStep ; subst ; inversion Prod ; subst.
     - destruct cs1 as [c1 s1] ; subst_eq_steps.
       eauto using EvtPrefix_some.
-    - destruct (step_exclusive c s); split; eauto.
+    - handle_prog_contradict.
   Qed.
 
   Lemma prod_conv_prefix : forall lst st, EvtPrefix lst st
-      -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ no_step c' s'
+      -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ ~ can_step c' s'
       -> Produces c s st
       -> Prefix lst lst'.
       intros lst st EvtPfx. induction EvtPfx ; intros c s c' s' lst' Conv Prod ; auto.
       inversion Prod; subst; destruct Conv as [Conv Hend]; inversion Conv; subst.
-      - destruct (step_exclusive c' s'); split; eauto.
+      - handle_prog_contradict.
       - subst_eq_steps.
         eauto.
-  Qed.
+  Qed. *)
 End TraceTheories.
