@@ -4,7 +4,7 @@ Import ListNotations.
 Class EqDec (A : Type) := {
   eq_dec : forall (a b : A), {a = b} + {a <> b}
 }.
-
+  
 (* The typeclass abstracting over a language's small-step semantics. *)
 Class LanguageSemantics := {
   Cmd : Type;
@@ -19,8 +19,8 @@ Class LanguageSemantics := {
   (* progess : <c,s> --a-> <c', s'> *)
   (* no step (gets stuck or terminates): <c,s> --/-> *)
   steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
-  no_step : Cmd -> Store -> Prop;
-  step_exclusive : forall c s, ~((exists c' s' a, steps_to c s a c' s') /\ (no_step c s));
+  can_step c s := exists e c' s', steps_to c s e c' s';
+  can_step_dec : forall c s, {can_step c s} + {~ can_step c s};
 }.
 
 Module Type LangDefs.
@@ -32,7 +32,11 @@ Module Type LangDefs.
   (* Production properties *)
   Section Production.
     (* notation for single step progression *)
-    Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50, no associativity).
+    Definition steps_to_combined cs1 a cs2 := steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2).
+    
+    Notation "cs1 '-->[' a ']' cs2" := (steps_to_combined cs1 a cs2) (at level 50, no associativity).
+
+    Definition no_step c s : Prop := ~ can_step c s.
 
     (* relation for multi-step progression w/ notation as well *)
     #[local] Reserved Notation "cs0 '==>*[' lst ']' cs1" (at level 50, no associativity).
