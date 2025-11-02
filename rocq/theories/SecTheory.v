@@ -9,29 +9,29 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP
   Import LangNotations.
 
   Section SilentProperties.
-      Theorem silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
-        intros.
-        induction l1 ; [reflexivity|].
-        simpl; destruct (sil_dec a); auto.
-        rewrite IHl1.
-        reflexivity.
-      Qed.
+    Theorem silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
+      intros.
+      induction l1 ; [reflexivity|].
+      simpl; destruct (sil_dec a); auto.
+      rewrite IHl1.
+      reflexivity.
+    Qed.
 
-      Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
-        unfold Same_set, Included, In, atk_knowledge, deq_evt_lst.
-        intros.
-        split; split; destruct H0; trivial; destruct H1 as [st' [Ha [p' [Hprod Hdeq]]]].
-        - exists st'; split; trivial.
-          exists p'; split; trivial.
-          rewrite silent_split; simpl.
-          destruct (sil_dec a); rewrite Hdeq; [auto using app_nil_r | contradiction].
-        - exists st'; split; trivial.
-          exists p'; split; trivial.
-          simpl in Hdeq.
-          rewrite <-Hdeq; simpl; rewrite silent_split; simpl.
-          destruct (sil_dec a); [auto using app_nil_r | contradiction].
-      Qed.
-    End SilentProperties.
+    Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
+      unfold Same_set, Included, In, atk_knowledge, deq_evt_lst.
+      intros.
+      split; split; destruct H0; trivial; destruct H1 as [st' [Ha [p' [Hprod Hdeq]]]].
+      - exists st'; split; trivial.
+        exists p'; split; trivial.
+        rewrite silent_split; simpl.
+        destruct (sil_dec a); rewrite Hdeq; [auto using app_nil_r | contradiction].
+      - exists st'; split; trivial.
+        exists p'; split; trivial.
+        simpl in Hdeq.
+        rewrite <-Hdeq; simpl; rewrite silent_split; simpl.
+        destruct (sil_dec a); [auto using app_nil_r | contradiction].
+    Qed.
+  End SilentProperties.
 
   Section DEqLists.
     Theorem deq_evt_lst_refl : forall l1, deq_evt_lst l1 l1.

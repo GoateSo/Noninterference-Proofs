@@ -1,21 +1,17 @@
 Require Import Basic Lang Determinism.
 Require Import SecDef SecPol Trace.
-Require Import BaseTheory TraceTheories.
+Require Import BaseTheory TraceTheories DetTheories.
 Require Import SecTheory.
 
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
-Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD) (TT : TraceTheories B LD TD Det).
-  Import B BT LD TD Det SP SD ST TT.
+Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (ST : SecurityTheory B LD TD SP SD) (TT : TraceTheories B LD TD) (DT : DetTheories B LD TD Det TT).
+  Import B BT LD TD Det SP SD ST TT DT.
   Import LangNotations.
 
   Section Core.
     Context (D : Ensemble Label) `{DecD : DecideIn Label D}.
-    
-    Axiom trace_pfx_production : forall c cs, trace_pfx_prod c cs.
-    Axiom trace_max : forall p, trace_pfx_maximize p.
-    Axiom trace_max_prod : forall c m p st, (c, m)==>*[p] -> (m, p) <=| (m, st) -> c ~~> (m, st).
 
     Lemma prefix_prefix_prod : forall p' p, Prefix p' p -> forall c m,  (c, m) ==>*[p] -> (c, m) ==>*[p'].
       unfold iter_trace_prod.
@@ -50,10 +46,10 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           pose proof (PSNI' (m1, p1) Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
           exists p2.
           split.
-          + rewrite (trace_pfx_production c (m2, s2) (m, p2)) in Hcs2.
-            destruct Hcs2.
-            apply H0.
-            assumption.
+          + pose proof trace_pfx_production c m2 s2 as [HDtprod _].
+            pose proof HDtprod Hcs2 p2; simpl in H0.
+            inversion Hpfx; subst.
+            rewrite <-H0. assumption.
           + assumption.
       - destruct H1.
         assumption.
@@ -86,17 +82,13 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       pose proof (hpsni_memset_invariance c HHPsniD m) as Htmp.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
         apply (prefix_prefix_prod p (p ++ [a]) (app_prefix a p)) in H.
-        pose proof trace_max (m, p) as [st Htmaxpref].
-        apply Htmp with st.
-        - apply trace_max_prod with p; assumption.
-        - assumption.
+        apply (trace_max c m p) in H as [st [Hepfx Htprod]]. 
+        apply Htmp with st; assumption.
       }
       assert (Same_set Store (indistincts c m) (atk_knowledge c m (p ++ [a]))). {
-        pose proof trace_max (m, p ++ [a]) as [st Htmaxpref].
+        apply (trace_max c m (p ++ [a])) in H as [st [Hepfx Htprod]].
         apply Same_set_sym.
-        apply Htmp with st.
-        - apply trace_max_prod with (p ++ [a]); assumption.
-        - assumption.  
+        apply Htmp with st; assumption.
       }
       apply Same_set_trans with (indistincts c m); assumption.
     Qed.
@@ -125,22 +117,44 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             unfold deq_evt_lst in Hp2Deq.
             rewrite app_nil_r.
             assumption.
-          * rewrite (trace_pfx_production c (m1, s1) (m1, l ++ [x])) in Hdp1.
-            rewrite Hdp1 in H1.
-            destruct (HKPsni l m1 x); [assumption | assumption |].
-            unfold Included, In, atk_knowledge in H2.
-            pose proof H2 m2 as H2ak.
-            destruct H2ak. {
+          * pose proof trace_pfx_production c m1 s1 as [Ha _].
+            pose proof Ha Hdp1 (l++[x]); simpl in H2.
+            apply H2 in H1.
+            destruct (HKPsni l m1 x) as [H4 _]; [assumption | assumption |].
+            unfold Included, In, atk_knowledge in H4.
+            pose proof H4 m2 as H4ak; clear H4.
+            destruct H4ak as [_ [st' [Htprod [p' [Hpprod Hpeq]]]]]. {
               split; [assumption | exists s2].
               split; [| exists p2; split]; assumption. 
             }
-            intros.
-            destruct H6 as [st' [Htprod [p' [Hpprod Hpeq]]]].
             unfold deq_evt_lst in Hpeq.
             rewrite silent_split in Hpeq. simpl in Hpeq.
             destruct (sil_dec x); [contradiction |].
             exists p'.
             auto.
     Qed.  
+
+    Theorem kpsni_det_impl_hpsni : forall c, In Cmd KPsniD c 
+      -> (det_rel steps_to_combined)
+      -> In Property HPsniD (behavior c).
+      unfold det_rel, steps_to_combined, KPsniD, In, HPsniD.
+      intros ? HKPsniD one_step_det [m1 st1] [m2 st2] ? ? ? p1 Hpsub.
+      destruct (kpsni_indistinct_conseq c HKPsniD st1 m1 st2 m2) as [Hl _]; [eauto| ].
+      apply Hl in H1.
+      destruct H1 as [Hindist Hprod].
+      destruct p1 as [mp1 p1].
+      inversion Hpsub; subst.
+      pose proof Hprod p1.
+      apply H1 in Hpsub.
+      destruct Hpsub as [p2 [Hp2prod Hp2deq]].
+      pose proof trace_max c m2 p2 Hp2prod as [stp2 [Hp2pfx Ht2prod]].
+      exists (m2, p2).
+      split.
+      - rewrite (trace_pfx_production c m2 st2) in H0.
+        rewrite <-H0 in Hp2prod.
+        assumption.
+      - unfold deq_pfx.
+        eauto.
+    Qed.
   End Core.
 End PSNI.
