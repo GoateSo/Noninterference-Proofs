@@ -70,7 +70,7 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     (* note: progress knowledge *)
     Definition prog_knowledge (c : Cmd) (m : Store) (p : list Event) : Ensemble Store := 
       fun m' => deq_store m m' 
-        /\ exists p' a, ((c, m')==>*[p] /\ deq_evt_lst p' (p ++ [a])) /\ ~ sil a.
+        /\ exists p' a, ((c, m')==>*[p'] /\ deq_evt_lst p' (p ++ [a])) /\ ~ sil a.
   End Knowledge.
 
   Section Progress.

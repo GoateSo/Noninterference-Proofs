@@ -1,11 +1,11 @@
 Require Import Basic Lang Determinism.
 Require Import SecPol SecDef Trace.
-Require Import BaseTheory.
+Require Import BaseTheory TraceTheories.
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
 Import ListNotations.
 
-Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (SD : SecurityDefs B LD TD SP) .
-  Import B LD TD SP SD.
+Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD).
+  Import B LD TD SP SD TT.
   Import LangNotations.
 
   Section SilentProperties.
@@ -17,6 +17,134 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP
       reflexivity.
     Qed.
 
+    Lemma sil_sing : forall a, sil a -> erase [a] = [].
+      intros; simpl.
+      destruct (sil_dec a); try contradiction.
+      reflexivity.
+    Qed.
+
+    Lemma nsil_sing : forall a, ~ sil a -> erase [a] = [a].
+      intros; simpl.
+      destruct (sil_dec a); try contradiction.
+      reflexivity.
+    Qed.
+
+    Lemma sil_hd : forall a l, sil a -> erase (a :: l) = erase l.
+      intros; simpl.
+      destruct (sil_dec a); try contradiction.
+      reflexivity.
+    Qed.
+
+    Lemma nsil_hd : forall a l, ~ sil a -> erase (a :: l) = a :: erase l.
+      intros; simpl.
+      destruct (sil_dec a); try contradiction.
+      reflexivity.
+    Qed.
+
+    Lemma silent_decomp : forall l1 l2 e, ~ sil e -> erase l1 = erase l2 -> exists l' ls', erase (l1 ++ [e]) = erase (l2 ++ l') /\ l' = ls' ++ [e] /\ erase ls' = [].
+      induction l1, l2; intros.
+      - exists [e].
+        exists [].
+        simpl.
+        eauto.
+      - simpl in *.
+        destruct (sil_dec e); try discriminate.
+        + exists [e0], [].
+          rewrite silent_split, <-H0.
+          destruct (sil_dec e0); try contradiction.
+          rewrite nsil_sing; try assumption.
+          simpl.
+          eauto.
+      - simpl in *.
+        destruct (sil_dec a); try discriminate.
+        + exists [e], [].
+          rewrite silent_split, nsil_sing; simpl; try assumption.
+          rewrite H0.
+          eauto.
+      - exists [e0], [].
+        rewrite silent_split, H0.
+        rewrite silent_split.
+        eauto.
+    Qed.
+
+    Lemma app_cons_middle :
+      forall (A : Type) (xs ys : list A) (x : A),
+        xs ++ [x] ++ ys = xs ++ (x :: ys).
+    Proof.
+      intros A xs ys x.
+      induction xs as [| h t IH]; simpl.
+      - reflexivity.
+      - rewrite <-IH.
+        reflexivity.
+    Qed.
+
+    Ltac rev_ind_for_list :=
+      lazymatch goal with
+      | [ |- forall (xs : list Event), _ ] =>
+          induction xs using rev_ind
+      | _ => idtac
+      end.
+
+    Lemma silent_break : forall l1 l2 e, 
+      ~ sil e 
+      -> erase l1 = erase (l2 ++ [e]) 
+      -> exists l1a ls, 
+          l1a ++ (e :: ls) = l1 
+          /\ erase l1a = erase l2 
+          /\ erase ls = [].
+      rev_ind_for_list; rev_ind_for_list; intros.
+      - rewrite silent_split, nsil_sing in H0; try assumption; simpl in H0.
+        discriminate.
+      - rewrite <-app_assoc, silent_split, silent_split in H0.
+        rewrite (nsil_sing e) in H0; try assumption.
+        rewrite app_assoc, <-silent_split in H0.
+        pose proof app_cons_not_nil (erase (l2 ++ [x])) [] e.
+        contradiction.
+      - rewrite silent_split in H0.
+        destruct (sil_dec x).
+        + rewrite sil_sing, app_nil_r in H0; try assumption.
+          specialize (IHl1 [] e H H0) as [l1a [l1b [Hcompose [Hdeq1 Hdeq2]]]].
+          exists l1a, (l1b ++ [x]).
+          split; try split.
+          * rewrite <-app_cons_middle in *.
+            rewrite <- Hcompose.
+            repeat rewrite <- app_assoc.
+            reflexivity.
+          * exact Hdeq1.
+          * rewrite silent_split.
+            rewrite sil_sing; try assumption.
+            rewrite Hdeq2.
+            reflexivity. 
+        + exists l1, [].
+          rewrite silent_split, (nsil_sing x), (nsil_sing e) in H0; try assumption.
+          simpl in H0.
+          rewrite <-app_nil_l in H0.
+          apply app_inj_tail in H0 as [Ha Hb]; subst.
+          eauto.
+      - destruct (sil_dec x).
+        + rewrite silent_split, (sil_sing x), app_nil_r in H0; try assumption.
+          specialize (IHl1 (l2 ++ [x0]) e H H0) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
+          exists l1a, (ls ++ [x]).
+          repeat rewrite silent_split.
+          rewrite (sil_sing x), app_nil_r; try assumption.
+          rewrite <-Hcompose, <-app_assoc, app_comm_cons.
+          rewrite silent_split in Hdeq1.
+          split; try split; try assumption.
+        + destruct (sil_dec x0).
+          * repeat rewrite silent_split in H0. 
+            rewrite (sil_sing x0), (nsil_sing x), (nsil_sing e), app_nil_r in H0; try assumption.
+            apply app_inj_tail in H0 as [Ha Hb]; subst.
+            exists l1, [].
+            rewrite silent_split, (sil_sing x0), app_nil_r; try assumption.
+            split; try split; eauto.
+          * rewrite silent_split, silent_split in H0.
+            rewrite (nsil_sing x), (nsil_sing e) in H0; try assumption.
+            apply app_inj_tail in H0 as [Ha Hb]; subst.
+            specialize (IHl1 l2 x0 n0 Ha) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
+            subst; clear n.
+            exists (l1a ++ x0 :: ls), [].
+            split; try split; try assumption; try reflexivity.
+    Qed.
     Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
       intros.
       split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
@@ -97,4 +225,29 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP
         + apply (TS s1 s2 s3); auto.
     Defined.
   End DeqTracePfx.
+
+  Section SubKnowledge.
+    Lemma prog_impl_atk_knowledge: forall c m p a, (c, m) ==>*[p ++ [a]] -> ~ sil a -> Included Store (prog_knowledge c m p) (atk_knowledge c m p).
+      intros ? ? ? ? Htsub Hnsil.
+      intros m' [Hmdeq [p' [a' [[Hpprod Hpdeq] Hnsil']]]].
+      split; try assumption.
+      unfold deq_evt_lst in Hpdeq.
+      pose proof (silent_break p' p a') Hnsil' Hpdeq as  [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
+      subst.
+      exists l1a.
+      split.
+      - assert (Prefix l1a (l1a ++ a' :: ls)). {
+          clear Hpdeq.
+          clear Hpprod.
+          clear Hdeq1.
+          induction l1a.
+          - apply Prefix_empty.
+          - rewrite <-app_comm_cons.
+            constructor.
+            assumption.
+        }
+        apply (prefix_prefix_prod l1a (l1a ++ a' :: ls)); assumption.
+      - unfold deq_evt_lst; auto.
+    Qed.
+  End SubKnowledge. 
 End SecurityTheory.
