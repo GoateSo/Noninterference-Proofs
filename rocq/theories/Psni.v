@@ -13,21 +13,6 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
   Section Core.
     Context (D : Ensemble Label) `{DecD : DecideIn Label D}.
 
-    Lemma prefix_prefix_prod : forall p' p, Prefix p' p -> forall c m,  (c, m) ==>*[p] -> (c, m) ==>*[p'].
-      unfold iter_trace_prod.
-      intros ? ? HPref.
-      dependent induction HPref; intros.
-      - exists (c, m); apply MultiStep_refl.
-      - destruct H.
-        inversion H; subst.
-        destruct cs1 as [c' m'].
-        pose proof IHHPref c' m'.
-        destruct H0.
-        + exists x; apply H5.
-        + exists x0.
-          apply (MultiStep_some (c, m) (c', m') x0); assumption. 
-    Qed.
-
     (* ------------------ KPSNI <=== HPSNI  ------------------ *)
     Lemma hpsni_indistinct_conseq : forall c, In Property HPsniD (behavior c)
     -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)

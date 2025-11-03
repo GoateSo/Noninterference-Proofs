@@ -79,6 +79,20 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
       apply (MultiStep_some (c, s) (c', s') cs2); assumption.
   Qed.
 
+  Lemma prefix_prefix_prod : forall p' p, Prefix p' p -> forall c m,  (c, m) ==>*[p] -> (c, m) ==>*[p'].
+      unfold iter_trace_prod.
+      intros ? ? HPref.
+      dependent induction HPref; intros.
+      - exists (c, m); apply MultiStep_refl.
+      - destruct H.
+        inversion H; subst.
+        destruct cs1 as [c' m'].
+        pose proof IHHPref c' m'.
+        destruct H0.
+        + exists x; apply H5.
+        + exists x0.
+          apply (MultiStep_some (c, m) (c', m') x0); assumption. 
+    Qed.
 
   Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
     intros.
