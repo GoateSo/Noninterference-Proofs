@@ -43,10 +43,8 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           pose proof (PSNI' (m1, p1) Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
           exists p2.
           split.
-          + pose proof trace_pfx_production c m2 s2 as [HDtprod _].
-            pose proof HDtprod Hcs2 p2; simpl in H0.
-            inversion Hpfx; subst.
-            apply H0. assumption.
+          + inversion Hpfx; subst.
+            apply (trace_pfx_production_fwd c m2 s2); assumption.
           + assumption.
       - destruct H1.
         assumption.
@@ -75,7 +73,6 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     Theorem Hpsni_impl_KPsni : forall c, In Property HPsniD (behavior c) -> In Cmd KPsniD c.
       unfold HPsniD, KPsniD.
       intros c HHPsniD p m a ? ?.
-      pose proof trace_pfx_production as Htraceprod.
       pose proof (hpsni_memset_invariance c HHPsniD m) as Hinv.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
         apply (prefix_prefix_prod p (p ++ [a]) (app_prefix a p)) in H.
@@ -114,13 +111,10 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             unfold deq_evt_lst in Hp2Deq.
             rewrite app_nil_r.
             assumption.
-          * pose proof trace_pfx_production c m1 s1 as [Ha _].
-            pose proof Ha Hdp1 (l++[x]); simpl in H2.
-            apply H2 in H1.
-            destruct (HKPsni l m1 x) as [H4 _]; [assumption | assumption |].
+          * apply (trace_pfx_production_fwd c m1 s1) in H1; try assumption.
+            destruct (HKPsni l m1 x) as [H4 _]; try assumption.
             unfold Included, In, atk_knowledge in H4.
             pose proof H4 m2 as H4ak; clear H4.
-            (* pose proof univ_production c m2 as [s2 _]. *)
             destruct H4ak as [Htprod [p' [Hpprod Hpeq]]]. {
               split; [| exists p2; split]; assumption. 
             }

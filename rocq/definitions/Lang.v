@@ -35,7 +35,7 @@ Module Type LangDefs.
     Definition steps_to_combined cs1 a cs2 := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)).
     Hint Unfold steps_to_combined : core.
     
-    Notation "cs1 '-->[' a ']' cs2" := (steps_to_combined cs1 a cs2) (at level 50, no associativity).
+    Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50, no associativity).
 
     Definition no_step c s : Prop := ~ can_step c s.
 

@@ -6,8 +6,8 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import B LD TD.
   Import LangNotations.
 
-  (* defn: to produce a trace means producing all finite prefixes of it *)
-  Axiom trace_pfx_production : forall c m st, c ~~> (m, st) <-> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
+  (* defn: reverse definition of trace pfx production -- in case it's still needed*)
+  Axiom trace_pfx_production_bkwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
   (* any finite trace prefix can be expanded to an infinite trace *)
   Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
   (* all configurations produce a trace *)
@@ -66,6 +66,25 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     inversion Pfx0LeT as [? lst0 ? EvtPfx0] ; subst.
     inversion Pfx1LeT as [? lst1 ? EvtPfx1] ; subst.
     assert (Prefix lst0 lst1 \/ Prefix lst1 lst0) as [|] by eauto using pfx_from_same_trace_leq_help ; auto using LePfx_intro.
+  Qed.
+
+  Lemma prefix_prod_mstep : forall lst c s st, Produces c s st
+        -> EvtPrefix lst st
+        -> (c, s) ==>*[lst].
+    induction lst ; intros c s st cs Prod ; eauto using EvtPrefix_empty.
+    - exists (c,s). apply MultiStep_refl.
+    - inversion Prod; subst. inversion cs; subst.
+      apply IHlst in H5 as [cs2 Hprod]; try assumption.
+      exists cs2.
+      apply (MultiStep_some (c, s) (c', s') cs2); assumption.
+  Qed.
+
+
+  Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
+    intros.
+    unfold "~~>", behavior in H; simpl in H.
+    inversion H0; subst.
+    apply prefix_prod_mstep with st; assumption.
   Qed.
 
   Ltac handle_prog_contradict :=

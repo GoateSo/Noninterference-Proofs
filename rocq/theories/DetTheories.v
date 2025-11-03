@@ -103,7 +103,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       destruct cs1 as [c1 s1].
       inversion Prod ; subst.
       - subst_eq_steps.
-        assert (exists st', Produces c' s' (prepend lst st')) as [st' ?] by eauto.
+        assert (exists st', Produces c1 s1 (prepend lst st')) as [st' ?] by eauto.
         eauto using Produces_step.
       - handle_prog_contradict.
     Qed. 
