@@ -54,15 +54,14 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
     Global Add Setoid EvtStream Eq_EvtSt Eq_EvtSt_equiv as EvtStreamSetoid.
 
   Section DetTraces.
-    Parameter Det : det_rel steps_to_combined.
+    Variable Det : (det_rel steps_to_combined).
     Lemma det_trace_prod : forall c m t1 t2, c ~~> (m, t1) -> c ~~> (m, t2) -> Eq_EvtSt t1 t2.
       unfold "~~>", behavior; simpl.
       cofix CH. 
       intros.
-      pose proof Det (c, m) as Hdet.
-      unfold det_rel, steps_to_combined in Hdet.
+      unfold det_rel, steps_to_combined in Det.
       inversion H; inversion H0; subst.
-      - destruct (Hdet (c', s') (c'0, s'0) a a0); try assumption.
+      - destruct (Det (c, m) (c', s') (c'0, s'0) a a0); try assumption.
         + constructor.
           * assumption.
           * rewrite pair_equal_spec in H3; destruct H3; subst;
@@ -72,6 +71,93 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       - apply produce_impl_canstep in H5.
         contradiction.
       - apply Eq_EvtSt_refl.
+    Qed.
+
+    (* note: below theories are conditioned on determinism used in subst_eq_steps *)
+  
+    Ltac subst_eq_steps :=
+      repeat lazymatch goal with
+        | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
+        | [H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
+          => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+        | [H0 : ?cs -->[?a0] ?cs0, H1 : steps_to_combined ?cs ?a1 ?cs1 |- _]
+          => unfold steps_to_combined in H1; assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+      end.
+
+    Lemma evt_prefix_prod_both : forall lst st0, EvtPrefix lst st0 -> forall c s st1, Produces c s st0 -> Produces c s st1 -> EvtPrefix lst st1.
+      intros lst st0 EvtPfx. induction EvtPfx ; intros c s st1 Prod0 Prod1 ; auto using EvtPrefix_empty.
+      inversion Prod0 ; inversion Prod1 ; subst; subst_eq_steps.
+      - eauto using EvtPrefix_some.
+      - handle_prog_contradict.
+    Qed.
+
+    Lemma pfx_prod_both : forall pfx s st0, pfx <=| (s, st0) -> forall c st1, Produces c s st0 -> Produces c s st1 -> pfx <=| (s, st1).
+      intros pfx s st0 PfxOf0 c st1 Prod0 Prod1.
+      inversion PfxOf0 as [? lst ? EvtPfx]. subst.
+      eauto using LeTrace_intro, evt_prefix_prod_both.
+    Qed.
+
+    Lemma prod_mstep : forall c s cs lst, (c, s) ==>*[lst] cs -> forall st, Produces c s st
+        -> exists st', Produces c s (prepend lst st').
+      intros c s cs lst MStep. dependent induction MStep ; intros st Prod ; eauto.
+      destruct cs1 as [c1 s1].
+      inversion Prod ; subst.
+      - subst_eq_steps.
+        assert (exists st', Produces c' s' (prepend lst st')) as [st' ?] by eauto.
+        eauto using Produces_step.
+      - handle_prog_contradict.
+    Qed. 
+
+    Lemma prod_prepend_mstep : forall c s c' s' lst, (c, s) ==>*[lst] (c', s')
+        -> forall st, c ~~> (s, (prepend lst st)) -> c' ~~> (s', st).
+      intros c s c' s' lst MStep. dependent induction MStep ; intros st ProdPrepend ; auto.
+      destruct cs1 as [c1 s1].
+      simpl in ProdPrepend ; inversion ProdPrepend ; subst ; subst_eq_steps.
+      eauto.
+    Qed. 
+
+    Lemma prod_prefix_mstep : forall lst c s st, c ~~> (s, st)
+        -> EvtPrefix lst st
+        -> exists cs, (c, s) ==>*[lst] cs.
+      induction lst ; intros c s st Prod Pfx ; eauto using MultiStep_refl.
+      inversion Pfx ; subst.
+      inversion Prod ; subst.
+      assert (exists cs, (c', s') ==>*[lst] cs) as [? ?] by eauto.
+      eauto using MultiStep.
+    Qed.
+
+    Lemma prod_mstep_prefix : forall lst c s st cs, Produces c s st
+        -> (c, s) ==>*[lst] cs
+        -> EvtPrefix lst st.
+      induction lst ; intros c s st cs Prod MStep ; eauto using EvtPrefix_empty.
+      inversion MStep ; subst ; inversion Prod ; subst.
+      - destruct cs1 as [c1 s1] ; subst_eq_steps.
+        eauto using EvtPrefix_some.
+      - handle_prog_contradict.
+    Qed.
+
+    Lemma prod_conv_prefix : forall lst st, EvtPrefix lst st
+        -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ ~ can_step c' s'
+        -> Produces c s st
+        -> Prefix lst lst'.
+        intros lst st EvtPfx. induction EvtPfx ; intros c s c' s' lst' Conv Prod ; auto.
+        inversion Prod; subst; destruct Conv as [Conv Hend]; inversion Conv; subst.
+        - handle_prog_contradict.
+        - subst_eq_steps.
+          eauto.
+    Qed. 
+
+    Lemma det_trace_pfx_production : forall c m st, 
+      c ~~> (m, st) -> (forall p, (c, m) ==>*[p] -> (m, p) <=| (m, st)).
+      intros ? ? ? ?.
+      pose proof Det (c,m) as one_step_det.
+      unfold steps_to_combined, det_rel in one_step_det.
+      intros.
+      destruct H0.
+      pose proof prod_mstep_prefix p c m st x.
+      unfold "~~>", behavior in H; simpl in H.
+      constructor.
+      apply H1; assumption.
     Qed.
   End DetTraces.
 End DetTheories.
