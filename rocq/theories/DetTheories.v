@@ -37,21 +37,21 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
   Qed.  
 
   Instance Eq_EvtSt_equiv: Equivalence (Eq_EvtSt).
-    Proof.
-      constructor.
-      - exact Eq_EvtSt_refl.
-      - exact Eq_EvtSt_sym.
-      - exact Eq_EvtSt_trans.
-    Qed.
+  Proof.
+    constructor.
+    - exact Eq_EvtSt_refl.
+    - exact Eq_EvtSt_sym.
+    - exact Eq_EvtSt_trans.
+  Qed.
 
-    Global Instance EvtCons_proper :
-      Proper (eq ==> Eq_EvtSt ==> Eq_EvtSt ) ConsEvt.
-    Proof.
-      intros h1 h2 H_head t1 t2 H_tail.
-      subst; constructor; [reflexivity | assumption].
-    Qed.
+  Global Instance EvtCons_proper :
+    Proper (eq ==> Eq_EvtSt ==> Eq_EvtSt ) ConsEvt.
+  Proof.
+    intros h1 h2 H_head t1 t2 H_tail.
+    subst; constructor; [reflexivity | assumption].
+  Qed.
 
-    Global Add Setoid EvtStream Eq_EvtSt Eq_EvtSt_equiv as EvtStreamSetoid.
+  Global Add Setoid EvtStream Eq_EvtSt Eq_EvtSt_equiv as EvtStreamSetoid.
 
   Section DetTraces.
     Variable Det : (det_rel steps_to_combined).

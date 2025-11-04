@@ -90,6 +90,21 @@ Module Type BaseTheories (B : Basic).
     Context {A : Type}.
     Notation Prefix := (Prefix (A := A)).
 
+    Lemma rev_destruct : forall (l : list A), l = [] \/ (exists init a, l = init ++ [a]).
+      induction l as [| a l' IH].
+      - left; reflexivity.
+      - destruct l' as [| b l''].
+        + right.
+          exists [], a; reflexivity.
+        + destruct IH; try discriminate.
+          destruct H as [? [? ?]].
+          right. 
+          exists (a :: x), x0.
+          rewrite <-app_comm_cons.
+          rewrite H.
+          reflexivity.
+    Qed.  
+
     Lemma cons_neq : forall (lst : list A) (a : A), lst <> a :: lst.
       induction lst ; intro.
       * apply nil_cons.

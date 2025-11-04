@@ -138,6 +138,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
             exists (l1a ++ x0 :: ls), [].
             split; [|split]; try assumption; try reflexivity.
     Qed.
+
     Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
       intros.
       split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
@@ -169,7 +170,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       reflexivity.
     Qed.
 
-    (* Instance deq_evt_lst_refl_equiv: Equivalence (deq_evt_lst).
+    Instance deq_evt_lst_refl_equiv: Equivalence (deq_evt_lst).
     Proof.
       constructor.
       - exact deq_evt_lst_refl.
@@ -177,7 +178,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       - exact deq_evt_lst_trans.
     Qed.
 
-    Global Add Setoid (list Event) deq_evt_lst deq_evt_lst_refl_equiv as deq_evt_lst_setoid. *)
+    Global Add Setoid (list Event) deq_evt_lst deq_evt_lst_refl_equiv as deq_evt_lst_setoid.
   End DEqLists.
 
   Section DleLists.
