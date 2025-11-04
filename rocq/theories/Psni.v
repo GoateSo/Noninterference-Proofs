@@ -6,7 +6,7 @@ Require Import SecTheory.
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
-Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD) (ST : SecurityTheory B LD TD SP SD TT)  (DT : DetTheories B LD TD Det TT).
+Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD) (ST : SecurityTheory B LD BT TD SP SD TT)  (DT : DetTheories B LD TD Det TT).
   Import B BT LD TD Det SP SD ST TT DT.
   Import LangNotations.
 
@@ -49,10 +49,6 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         apply (hpsni_indistinct_conseq c H st m st') in Hin. 
           + destruct Hin. split; auto.
           + split; assumption.
-    Qed.
-    
-    Lemma app_prefix : forall (a : Event) p, Prefix p (p ++ [a]).
-      intros; induction p; [apply Prefix_empty | apply Prefix_some, IHp].
     Qed.
 
     Theorem Hpsni_impl_KPsni : forall c, In Property HPsniD (behavior c) -> In Cmd KPsniD c.
