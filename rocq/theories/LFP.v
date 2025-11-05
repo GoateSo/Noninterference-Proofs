@@ -23,7 +23,7 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       pose proof trace_max c m' (p') Hpprod as [st2 [Htpref2 Htprod2]]. 
       specialize (HHLfpD (m', st2) (m, st1) Htprod2 Htprod1 (m', p') (m, p ++ [a])  Htpref2 Htpref1). 
       inversion Htpref1; inversion Htpref2; subst.
-      destruct HHLfpD. {
+      destruct HHLfpD as [[? p2] [Hres1 Hres2]]. {
         unfold dlt_pfx; split.
         - constructor; simpl.
           + apply deq_evt_lst_sym in Hpdeq.
@@ -31,16 +31,30 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
             rewrite silent_split in *.
             rewrite (nsil_sing a) in *; try assumption.
             rewrite Hpdeq.
-            apply (app_prefix a (erase p)).
+            apply (app_prefix (erase p) [a]).
           + apply deq_store_equiv.
             assumption.
         - intro H.
           inversion H; simpl in *; clear H2 H.
-          admit.
+          pose proof deq_evt_lst_sym p p'.
+          apply H in Hpdeq.
+          rewrite Hpdeq in H1.
+          inversion H1.
+          rewrite silent_split, nsil_sing in H3; try assumption.
+          apply (list_app_neq_list (erase p) a).
+          assumption.
       }
-      destruct H.
-      admit. 
-    Admitted.
+      inversion Hres1; subst.
+      apply dlt_pfx_alt in Hres2 as [a' [Hnsila' Hdeqpa']].
+      pose proof dle_evt_lst_alt (p'++[a']) p2 Hdeqpa' as [p'' [Hppref Hppdeq]].
+      pose proof trace_pfx_production_fwd c m' st2 Htprod2 p2 Hres1 as Hp2prod.
+      apply prefix_prefix_prod with (p':=p'')in Hp2prod; try assumption.
+      exists p'',a'.
+      split; try split; try assumption.
+      unfold deq_evt_lst in *.
+      rewrite silent_split, Hpdeq in *.
+      eauto.
+    Qed.
 
     Theorem Hplfp_impl_KPlfp : forall c, In Property HLfpD (behavior c) -> In Cmd KLfpD c.
       intros ? Hlfp ? ? ? Hpaprod Hnsil.
@@ -60,4 +74,4 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       -> In Property HLfpD (behavior c).  
     Admitted.
   End Core.
-End LFP.
+End LFP. 

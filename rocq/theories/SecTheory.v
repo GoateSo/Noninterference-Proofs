@@ -139,6 +139,16 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
             split; [|split]; try assumption; try reflexivity.
     Qed.
 
+    Lemma erasure_inv : forall p a p2, Prefix ((erase p) ++ [a]) p2 -> Prefix (erase (p ++ [a])) p2.
+      intros. destruct (sil_dec a).
+      - rewrite silent_split, sil_sing, app_nil_r; try assumption.
+        pose proof (app_prefix (erase p) [a]).
+        pose proof @prefix_preorder_inst Event as [_ Htrans].
+        specialize (Htrans (erase p) (erase p ++ [a]) p2).
+        apply Htrans; assumption.
+      - rewrite silent_split, nsil_sing; try assumption.
+    Qed.
+
     Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
       intros.
       split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
@@ -198,24 +208,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       apply (Htrans (erase l1) (erase l2) (erase l3)); assumption.
     Qed.
 
-    Lemma app_not_nil {A : Type} : forall (xs : list A) x, [] <> xs ++ [x].
-      destruct xs; intros x Hbad; inversion Hbad.
-    Qed.
-
-    Lemma app_prefix {A : Type} : forall (a : A) p, Prefix p (p ++ [a]).
-      intros; induction p; [apply Prefix_empty | apply Prefix_some, IHp].
-    Qed.
-
-    Lemma prefix_app {A : Type} : forall (ys xs: list A) x, Prefix ys xs -> Prefix ys (xs ++ [x]).
-      pose proof @prefix_preorder_inst A as [_ Htrans].
-      unfold Transitive in Htrans.
-      intros.
-      specialize (Htrans ys xs (xs ++ [x])).
-      apply Htrans.
-      - assumption.
-      - exact (app_prefix x xs).
-    Qed. 
-
     Lemma gen_prefix_erase_exists : 
       forall (p l2 : list Event), 
         Prefix p (erase l2) -> 
@@ -245,11 +237,24 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
 
     Theorem dle_evt_lst_alt : 
       forall (l1 l2 : list Event), 
-        Prefix (erase l1) (erase l2) -> 
-        exists l2', Prefix l2' l2 /\ (erase l1) = (erase l2').
+        dle_evt_lst l1 l2 -> 
+        exists l2', Prefix l2' l2 /\ deq_evt_lst l1 l2'.
     Proof.
       intros l1 l2 H.
       apply gen_prefix_erase_exists with (p := erase l1), H.
+    Qed.
+    
+    Lemma erase_in : forall e p, List.In e (erase p) -> ~ sil e.
+      intros.
+      induction p.
+      - inversion H.
+      - destruct (sil_dec a) eqn:Heq.
+        + simpl in H; rewrite Heq in H.
+          eauto.
+        + simpl in H; rewrite Heq in H.
+          apply in_inv in H; destruct H.
+          * subst; assumption.
+          * eauto.
     Qed.
   End DleLists.
 
@@ -280,6 +285,37 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         + apply (TS s1 s2 s3); auto.
     Defined.
   End DeqTracePfx.
+
+  Section DltTracePfx.
+    Lemma dlt_conseq : forall m p1 p2, dlt_pfx (m, p1) (m, p2) -> 
+      dle_evt_lst p1 p2 /\ ~ deq_evt_lst p1 p2.
+      intros; unfold dlt_pfx, dle_pfx, deq_pfx in H.
+      simpl in H; destruct H.
+      split.
+      - destruct H. assumption.
+      - intro Hbad.
+        destruct H0, H.
+        split; assumption.
+    Qed.
+    
+    Lemma dlt_impl_prop_prefix :  forall m p1 p2, dlt_pfx (m, p1) (m, p2) ->
+      PropPrefix (erase p1) (erase p2).
+      intros; apply dlt_conseq in H as [Hdle Hdeq].
+      unfold dle_evt_lst, deq_evt_lst in *.
+      split; assumption.
+    Qed.
+
+    Lemma dlt_pfx_alt : forall m p1 p2, dlt_pfx (m, p1) (m, p2) -> exists a, ~ sil a /\ dle_evt_lst (p1 ++ [a]) p2.
+      intros.
+      apply dlt_impl_prop_prefix in H.
+      apply prop_prefix_exists_next in H as [a [Hpref Hpres]].
+      exists a; split.
+      - apply erase_in in Hpres. assumption.
+      - unfold dle_evt_lst.
+        apply erasure_inv.
+        assumption.
+    Qed.
+  End DltTracePfx.
 
   (* theorems for : atk_know p <= prog_know p <= atk_know (p ++ [a]) *)
   Section SubKnowledge.
