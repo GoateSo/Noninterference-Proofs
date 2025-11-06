@@ -56,7 +56,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       intros c HHPsniD p m a ? ?.
       pose proof (hpsni_memset_invariance c HHPsniD m) as Hinv.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
-        apply (prefix_prefix_prod p (p ++ [a]) (app_prefix a p)) in H.
+        apply (prefix_prefix_prod p (p ++ [a]) (app_prefix p [a])) in H.
         apply (trace_max c m p) in H as [st [Hepfx Htprod]]. 
         apply Hinv with st; assumption.
       }
@@ -81,7 +81,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         exists (c, m2); apply MultiStep_refl. apply deq_evt_lst_refl.
       + inversion H1; subst.
         unfold deq_evt_lst.
-        assert (EvtPrefix l s1) by eauto using (app_prefix x l), lst_prefix_stream_prefix.
+        assert (EvtPrefix l s1) by eauto using (app_prefix l [x]), lst_prefix_stream_prefix.
         apply (LeTrace_intro m1) in H2.
         apply H0 in H2.
         destruct H2 as [p2 [Hp2Prod Hp2Deq]].

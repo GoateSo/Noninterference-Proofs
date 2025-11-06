@@ -6,8 +6,6 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import B LD TD.
   Import LangNotations.
 
-  (* defn: reverse definition of trace pfx production -- in case it's still needed*)
-  (* Axiom trace_pfx_production_bkwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]). *)
   (* any finite trace prefix can be expanded to an infinite trace *)
   Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
   (* all configurations produce a trace *)

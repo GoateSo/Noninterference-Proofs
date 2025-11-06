@@ -244,5 +244,21 @@ Module Type BaseTheories (B : Basic).
         end.
       * apply f_equal. eauto.
     Qed.
+
+    Lemma prefix_split : forall (p p' : list A), PropPrefix p p' -> exists p'', p' = p ++ p'' /\ [] <> p''.
+      intros.
+      destruct H.
+      induction H.
+      - exists lst; split; [ reflexivity | assumption ].
+      - destruct IHPrefix.
+        + intro Hbad.
+          destruct H0.
+          rewrite Hbad.
+          reflexivity.
+        + destruct H1. 
+          exists x; split; [| assumption].
+          rewrite H1.
+          reflexivity.
+    Qed. 
   End ListPrefix.
 End BaseTheories.

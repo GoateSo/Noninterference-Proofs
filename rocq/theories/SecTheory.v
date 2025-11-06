@@ -357,22 +357,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           reflexivity.
     Qed.
 
-    Lemma prefix_split { A : Type } : forall (p p' : list A), PropPrefix p p' -> exists p'', p' = p ++ p'' /\  [] <> p''.
-      intros.
-      destruct H.
-      induction H.
-      - exists lst; split; [ reflexivity | assumption ].
-      - destruct IHPrefix.
-        + intro Hbad.
-          destruct H0.
-          rewrite Hbad.
-          reflexivity.
-        + destruct H1. 
-          exists x; split; [| assumption].
-          rewrite H1.
-          reflexivity.
-    Qed. 
-
     Lemma PropPrefix_nil_prod : forall p1 p2, PropPrefix (erase p1) (erase p2) ->
       exists p2' e, PropPrefix p2' p2 /\ ~ sil e /\ Prefix (p2' ++ [e]) p2 /\ deq_evt_lst p1 p2'.
       intros ? ? [Hpref Hneq].
