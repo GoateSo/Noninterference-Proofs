@@ -52,7 +52,7 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       split; try split; try assumption.
       unfold deq_evt_lst in *.
       rewrite silent_split, Hpdeq in *.
-      eauto.
+      auto.
       apply deq_store_equiv.
     Qed.
 
@@ -63,9 +63,7 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       split.
       - intros m' [Hdeq [p' [Hpprod Hpdeq]]].
         pose proof Hlemma m' Hdeq; split; try assumption.
-        destruct H as [p2 [a' [? [? ?]]]]. { exists p'; eauto. }
-        exists p2, a'.
-        split; try split; try assumption.
+        destruct H as [p2 [a' [? [? ?]]]]; eauto.
       - apply (prog_impl_atk_knowledge c m p a); assumption.
     Qed.
 
@@ -79,11 +77,9 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       specialize (HKlfp p m e Hprod Hnsil) as [Hatk_impl_prog _].
       unfold Included, atk_knowledge, prog_knowledge, In in Hatk_impl_prog.
       specialize (Hatk_impl_prog m').
-      destruct Hatk_impl_prog.
-      - split; try split; assumption.
-      - destruct H0 as [p' [e' [[? ?] ?]]].
-        exists p',e'.
-        split; try split; assumption.
+      destruct Hatk_impl_prog; [auto|].
+      destruct H0 as [p' [e' [[? ?] ?]]].
+      eauto.
     Qed.
 
     Theorem klfp_det_impl_hlfp : forall c, In Cmd KLfpD c 
@@ -109,31 +105,27 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
         apply Hdssym; assumption.
       }
       pose proof KLfP_conseq c m2 p2' e HKlfp Hnsil H6 m1 H7.
-      destruct H8.
-      - exists p1; split; try assumption.
-        unfold deq_evt_lst in *.
-        rewrite Hdeqp1.
-        reflexivity.
-      - destruct H8 as [e' [Hdeq [Hnsil2 Hprod]]].
-        unfold progressD.
-        exists (m1, x).
-        split.
-        + pose proof det_trace_pfx_production one_step_det.
-          exact (H8 c m1 t1 Ht1Prod x Hprod).
-        + unfold PropPrefix in H4.
-          unfold deq_evt_lst in Hdeqp1, Hdeq.
-          rewrite Hdeqp1 in H4.
-          constructor.
-          * constructor; simpl; try apply deq_store_equiv.
-            unfold dle_evt_lst.
-            rewrite Hdeqp1, Hdeq, silent_split, nsil_sing; try assumption.
-            apply app_prefix.
-          * intro Hbad.
-            inversion Hbad; simpl in H8, H9.
-            unfold deq_evt_lst in H8.
-            rewrite Hdeqp1, Hdeq, silent_split, nsil_sing in H8; try assumption.
-            pose proof list_app_neq_list (erase p2') e'.
-            contradiction. 
+      destruct H8; [eauto|].
+      destruct H8 as [e' [Hdeq [Hnsil2 Hprod]]].
+      unfold progressD.
+      exists (m1, x).
+      split.
+      - pose proof det_trace_pfx_production one_step_det.
+        exact (H8 c m1 t1 Ht1Prod x Hprod).
+      - unfold PropPrefix in H4.
+        unfold deq_evt_lst in Hdeqp1, Hdeq.
+        rewrite Hdeqp1 in H4.
+        constructor.
+        + constructor; simpl; try apply deq_store_equiv.
+          unfold dle_evt_lst.
+          rewrite Hdeqp1, Hdeq, silent_split, nsil_sing; auto.
+          apply app_prefix.
+        + intro Hbad.
+          inversion Hbad; simpl in H8, H9.
+          unfold deq_evt_lst in H8.
+          rewrite Hdeqp1, Hdeq, silent_split, nsil_sing in H8; auto.
+          pose proof list_app_neq_list (erase p2') e'.
+          contradiction. 
     Qed.
   End Core.
 End LFP. 

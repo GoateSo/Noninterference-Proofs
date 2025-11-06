@@ -39,7 +39,6 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     In Property HPsniD (behavior c) 
     -> forall m st, c ~~> (m, st)
     -> forall p', (m, p') <=| (m, st) -> Same_set Store (atk_knowledge c m p') (indistincts c m).
-      unfold Included.
       split; intros m' Hin.
       - destruct Hin as [Hdeq _]; assumption.
       - pose proof univ_production c m' as [st' Hprod].
@@ -78,7 +77,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       split; [assumption |].
       apply (rev_ind (fun p1 => (m1, p1) <=| (m1, s1) -> exists p2, (c,m2)==>*[p2] /\ deq_evt_lst p1 p2)); intros.
       + exists []; split; auto.
-        exists (c, m2); apply MultiStep_refl. apply deq_evt_lst_refl.
+        exists (c, m2); apply MultiStep_refl.
       + inversion H1; subst.
         unfold deq_evt_lst.
         assert (EvtPrefix l s1) by eauto using (app_prefix l [x]), lst_prefix_stream_prefix.
@@ -102,8 +101,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             unfold deq_evt_lst in Hpeq.
             rewrite silent_split in Hpeq. simpl in Hpeq.
             destruct (sil_dec x); [contradiction |].
-            exists p'.
-            auto.
+            eauto.
     Qed.  
 
     Theorem kpsni_det_impl_hpsni : forall c, In Cmd KPsniD c 
@@ -123,8 +121,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       - pose proof det_trace_pfx_production one_step_det c m2 st2 H0 p2.
         apply H1.
         assumption.
-      - unfold deq_pfx.
-        eauto.
+      - auto.
     Qed.
   End Core.
 End PSNI.

@@ -60,7 +60,13 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
     Definition dlt_pfx : relation TracePfx :=
       fun cs1 cs2 => dle_pfx cs1 cs2 /\ ~(deq_pfx cs1 cs2).
   End MoreDEquivalence.
-  
+
+  #[global] Hint Unfold deq_evt_lst : core.
+  #[global] Hint Unfold dle_evt_lst : core.
+  #[global] Hint Unfold deq_pfx : core.
+  #[global] Hint Unfold dlt_pfx : core.
+  #[global] Hint Unfold dle_pfx : core.
+ 
   Section Knowledge.
     (* note: attacker knowledge *)
     (* note2: defined currently using Props and <-> instead of sets and = *)

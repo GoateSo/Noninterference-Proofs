@@ -22,7 +22,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       simpl; destruct (sil_dec a); try assumption.
       rewrite IHl1.
       reflexivity.
-    Qed.
+    Qed. 
 
     Lemma sil_sing : forall a, sil a -> erase [a] = [].
       intros; simpl.
@@ -31,18 +31,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
     Qed.
 
     Lemma nsil_sing : forall a, ~ sil a -> erase [a] = [a].
-      intros; simpl.
-      destruct (sil_dec a); try contradiction.
-      reflexivity.
-    Qed.
-
-    Lemma sil_hd : forall a l, sil a -> erase (a :: l) = erase l.
-      intros; simpl.
-      destruct (sil_dec a); try contradiction.
-      reflexivity.
-    Qed.
-
-    Lemma nsil_hd : forall a l, ~ sil a -> erase (a :: l) = a :: erase l.
       intros; simpl.
       destruct (sil_dec a); try contradiction.
       reflexivity.
@@ -135,8 +123,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
             apply app_inj_tail in H0 as [Ha Hb]; subst.
             specialize (IHl1 l2 x0 n0 Ha) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
             subst; clear n.
-            exists (l1a ++ x0 :: ls), [].
-            split; [|split]; try assumption; try reflexivity.
+            eauto.
     Qed.
 
     Lemma erasure_inv : forall p a p2, Prefix ((erase p) ++ [a]) p2 -> Prefix (erase (p ++ [a])) p2.
@@ -217,14 +204,14 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       generalize dependent p.
       induction l2 as [|e l2' IHl2]; intros.
       - inversion H.
-        exists []; eauto using Prefix_empty.
+        eauto using Prefix_empty.
       - simpl in H; destruct (sil_dec e) eqn:Heq.
         + specialize (IHl2 p H) as [l2_sub [H_sub_prefix H_sub_erase]].
           exists (e :: l2_sub); simpl; split.
           * constructor; assumption.
           * rewrite Heq; assumption.
         + inversion H.
-          * exists []. now split; [constructor | reflexivity].
+          * eauto.
           * subst.
             specialize (IHl2 lst0 H2) as [l2'' [? ?]].
             exists (e :: l2''); simpl.
@@ -248,11 +235,9 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       intros.
       induction p.
       - inversion H.
-      - destruct (sil_dec a) eqn:Heq.
-        + simpl in H; rewrite Heq in H.
-          eauto.
-        + simpl in H; rewrite Heq in H.
-          apply in_inv in H; destruct H.
+      - destruct (sil_dec a) eqn:Heq; simpl in H; rewrite Heq in H.
+        + eauto.
+        + apply in_inv in H; destruct H.
           * subst; assumption.
           * eauto.
     Qed.
@@ -298,7 +283,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         split; assumption.
     Qed.
     
-    Lemma dlt_impl_prop_prefix :  forall m1 m2 p1 p2, deq_store m1 m2 ->  dlt_pfx (m1, p1) (m2, p2) ->
+    Lemma dlt_impl_prop_prefix : forall m1 m2 p1 p2, deq_store m1 m2 ->  dlt_pfx (m1, p1) (m2, p2) ->
       PropPrefix (erase p1) (erase p2).
       intros.
       apply dlt_conseq in H0 as [Hdle Hdeq].
@@ -337,10 +322,9 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       p = p_sil ++ e :: p_rest 
       /\ deq_evt_lst p_sil []
       /\ ~ sil e.
-      induction p.
-      - intros; destruct H. reflexivity.
-      - intros.
-        destruct (sil_dec a) eqn:Heq.
+      induction p; intros.
+      - destruct H. reflexivity.
+      - destruct (sil_dec a) eqn:Heq.
         + unfold deq_evt_lst, erase in H.
           rewrite Heq in H.
           unfold deq_evt_lst in IHp; simpl in IHp.
@@ -348,13 +332,9 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           destruct IHp as [p_sil [e [p_rest [Hcompose [Hpsil Hnsil]]]]].
           exists (a :: p_sil), e, p_rest; simpl.
           unfold deq_evt_lst, erase.
-          rewrite <-Hcompose.
-          rewrite Heq.
-          split; try split; assumption.
-        + exists [], a, p.
-          simpl. 
-          split; try split; try assumption.
-          reflexivity.
+          rewrite <-Hcompose, Heq.
+          auto.
+        + exists [], a, p. auto.
     Qed.
 
     Lemma PropPrefix_nil_prod : forall p1 p2, PropPrefix (erase p1) (erase p2) ->
@@ -375,8 +355,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         intro Hbad.
         subst p2.
         rewrite silent_split, Hbad, app_nil_r in Hneq.
-        apply Hneq.
-        assumption.
+        auto.
       }
       apply find_first_kept in H0 as [p_sil [e [p_rest [Hcompose2 [Hpsil Hnsil]]]]].
       exists (p2' ++ p_sil), e.
@@ -389,14 +368,12 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         intro Hbad.
         apply app_inv_head in Hbad.
         inversion Hbad.
-      - rewrite <-app_assoc.
-        rewrite <-app_cons_middle with (ys:=p_rest).
+      - rewrite <-app_assoc, <-app_cons_middle with (ys:=p_rest).
         pose proof (app_prefix (p2' ++ p_sil ++ [e]) (p_rest)).
         rewrite <-app_assoc in H0. rewrite <-app_assoc in H0.
         assumption.
       - unfold deq_evt_lst in *.
-        rewrite silent_split.
-        rewrite Hpsil, app_nil_r.
+        rewrite silent_split, Hpsil, app_nil_r.
         assumption.
     Qed. 
   End DltTracePfx.
@@ -414,11 +391,10 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       split.
       - assert (Prefix l1a (l1a ++ a' :: ls)). {
           clear Hpdeq Hpprod Hdeq1.
-          induction l1a.
-          - apply Prefix_empty.
-          - rewrite <-app_comm_cons.
-            constructor.
-            assumption.
+          induction l1a; [apply Prefix_empty|].
+          rewrite <-app_comm_cons.
+          constructor.
+          assumption.
         }
         apply (prefix_prefix_prod l1a (l1a ++ a' :: ls)); assumption.
       - unfold deq_evt_lst; auto.
