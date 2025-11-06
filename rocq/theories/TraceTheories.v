@@ -70,7 +70,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         -> EvtPrefix lst st
         -> (c, s) ==>*[lst].
     induction lst ; intros c s st cs Prod ; eauto using EvtPrefix_empty.
-    - exists (c,s). apply MultiStep_refl.
+    - exists (c,s). auto.
     - inversion Prod; subst. inversion cs; subst.
       apply IHlst in H5 as [cs2 Hprod]; try assumption.
       exists cs2.
@@ -81,7 +81,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
       unfold iter_trace_prod.
       intros ? ? HPref.
       dependent induction HPref; intros.
-      - exists (c, m); apply MultiStep_refl.
+      - eauto.
       - destruct H.
         inversion H; subst.
         destruct cs1 as [c' m'].

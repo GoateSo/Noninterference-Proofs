@@ -37,8 +37,6 @@ Module Type LangDefs.
     
     Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50, no associativity).
 
-    Definition no_step c s : Prop := ~ can_step c s.
-
     (* relation for multi-step progression w/ notation as well *)
     #[local] Reserved Notation "cs0 '==>*[' lst ']' cs1" (at level 50, no associativity).
     Inductive MultiStep : Cmd * Store -> Cmd * Store -> list Event -> Prop :=
@@ -55,6 +53,9 @@ Module Type LangDefs.
 
     Definition diverge c s : Prop := forall cs1 lst, (c, s) ==>*[lst] cs1 -> exists cs2 a, cs1 -->[a] cs2.
   End Production.
+  #[global] Hint Unfold steps_to_combined : core.
+  #[global] Hint Resolve MultiStep_refl : core.
+  #[global] Hint Resolve MultiStep_some : core.
 
   Module LangNotations.
     Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50).

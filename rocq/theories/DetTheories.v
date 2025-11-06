@@ -73,8 +73,6 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       - apply Eq_EvtSt_refl.
     Qed.
 
-    (* note: below theories are conditioned on determinism used in subst_eq_steps *)
-  
     Ltac subst_eq_steps :=
       repeat lazymatch goal with
         | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
@@ -115,16 +113,6 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       simpl in ProdPrepend ; inversion ProdPrepend ; subst ; subst_eq_steps.
       eauto.
     Qed. 
-
-    Lemma prod_prefix_mstep : forall lst c s st, c ~~> (s, st)
-        -> EvtPrefix lst st
-        -> exists cs, (c, s) ==>*[lst] cs.
-      induction lst ; intros c s st Prod Pfx ; eauto using MultiStep_refl.
-      inversion Pfx ; subst.
-      inversion Prod ; subst.
-      assert (exists cs, (c', s') ==>*[lst] cs) as [? ?] by eauto.
-      eauto using MultiStep.
-    Qed.
 
     Lemma prod_mstep_prefix : forall lst c s st cs, Produces c s st
         -> (c, s) ==>*[lst] cs

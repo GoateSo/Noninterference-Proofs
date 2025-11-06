@@ -125,6 +125,16 @@ Module Type BaseTheories (B : Basic).
       destruct xs; intros x Hbad; inversion Hbad.
     Qed.
 
+    Lemma app_cons_middle : forall (xs ys : list A) (x : A),
+        xs ++ [x] ++ ys = xs ++ (x :: ys).
+    Proof.
+      intros.
+      induction xs; simpl.
+      - reflexivity.
+      - rewrite <-IHxs.
+        reflexivity.
+    Qed.
+
     Lemma app_prefix : forall (p p2 : list A), Prefix p (p ++ p2).
       intros; induction p; [apply Prefix_empty | apply Prefix_some, IHp].
     Qed.

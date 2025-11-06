@@ -75,15 +75,15 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       intros c HKPsni s1 m1 s2 m2 [Hdp1 Hdp2].
       split; intros; [| destruct H; assumption].
       split; [assumption |].
-      apply (rev_ind (fun p1 => (m1, p1) <=| (m1, s1) -> exists p2, (c,m2)==>*[p2] /\ deq_evt_lst p1 p2)); intros.
+      induction p1 using rev_ind; intros.
       + exists []; split; auto.
-        exists (c, m2); apply MultiStep_refl.
-      + inversion H1; subst.
+        exists (c, m2); auto.
+      + inversion H0; subst.
         unfold deq_evt_lst.
-        assert (EvtPrefix l s1) by eauto using (app_prefix l [x]), lst_prefix_stream_prefix.
-        apply (LeTrace_intro m1) in H2.
-        apply H0 in H2.
-        destruct H2 as [p2 [Hp2Prod Hp2Deq]].
+        assert (EvtPrefix p1 s1) by eauto using (app_prefix p1 [x]), lst_prefix_stream_prefix.
+        apply (LeTrace_intro m1) in H1.
+        apply IHp1 in H1.
+        destruct H1 as [p2 [Hp2Prod Hp2Deq]].
         rewrite silent_split; simpl.
         destruct (sil_dec x).
           * exists p2.
@@ -91,8 +91,8 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             unfold deq_evt_lst in Hp2Deq.
             rewrite app_nil_r.
             assumption.
-          * apply (trace_pfx_production_fwd c m1 s1) in H1; try assumption.
-            destruct (HKPsni l m1 x) as [H4 _]; try assumption.
+          * apply (trace_pfx_production_fwd c m1 s1) in H0; try assumption.
+            destruct (HKPsni p1 m1 x) as [H4 _]; try assumption.
             unfold Included, In, atk_knowledge in H4.
             pose proof H4 m2 as H4ak; clear H4.
             destruct H4ak as [Htprod [p' [Hpprod Hpeq]]]. {

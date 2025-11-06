@@ -8,12 +8,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   Import B BT LD TD SP SD TT.
   Import LangNotations.
 
-  Ltac rev_ind_for_list :=
-    lazymatch goal with
-    | [ |- forall (xs : list Event), _ ] =>
-        induction xs using rev_ind
-    | _ => idtac
-    end.
+  Ltac list_rev_ind xs := induction xs using rev_ind.
 
   Section SilentProperties.
     Theorem silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
@@ -36,7 +31,11 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       reflexivity.
     Qed.
 
-    Lemma silent_decomp : forall l1 l2 e, ~ sil e -> erase l1 = erase l2 -> exists l' ls', erase (l1 ++ [e]) = erase (l2 ++ l') /\ l' = ls' ++ [e] /\ erase ls' = [].
+    Lemma silent_decomp : forall l1 l2 e, ~ sil e 
+      -> erase l1 = erase l2 
+      -> exists l' ls', erase (l1 ++ [e]) = erase (l2 ++ l') 
+          /\ l' = ls' ++ [e] 
+          /\ erase ls' = [].
       induction l1, l2; intros.
       - exists [e], [].
         eauto.
@@ -58,17 +57,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         eauto.
     Qed.
 
-    Lemma app_cons_middle :
-      forall (A : Type) (xs ys : list A) (x : A),
-        xs ++ [x] ++ ys = xs ++ (x :: ys).
-    Proof.
-      intros A xs ys x.
-      induction xs as [| h t IH]; simpl.
-      - reflexivity.
-      - rewrite <-IH.
-        reflexivity.
-    Qed.
-
     Lemma silent_break : forall l1 l2 e, 
       ~ sil e 
       -> erase l1 = erase (l2 ++ [e]) 
@@ -76,7 +64,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           l1a ++ (e :: ls) = l1 
           /\ erase l1a = erase l2 
           /\ erase ls = [].
-      rev_ind_for_list; rev_ind_for_list; intros.
+      list_rev_ind l1; list_rev_ind l2; intros.
       - rewrite silent_split, nsil_sing in H0; try assumption.
         discriminate.
       - rewrite <-app_assoc, silent_split, silent_split in H0.
@@ -147,27 +135,27 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   End SilentProperties.
 
   Section DEqLists.
-    Theorem deq_evt_lst_refl : forall l1, deq_evt_lst l1 l1.
+    Lemma deq_evt_lst_refl : forall l1, deq_evt_lst l1 l1.
       intros.
       unfold deq_evt_lst.
       trivial.
     Qed.
 
-    Theorem deq_evt_lst_sym : forall l1 l2,  deq_evt_lst l1 l2 -> deq_evt_lst l2 l1.
+    Lemma deq_evt_lst_sym : forall l1 l2,  deq_evt_lst l1 l2 -> deq_evt_lst l2 l1.
       unfold deq_evt_lst.
       intros.
       rewrite H.
       reflexivity.
     Qed.
 
-    Theorem deq_evt_lst_trans : forall l1 l2 l3, deq_evt_lst l1 l2 -> deq_evt_lst l2 l3 -> deq_evt_lst l1 l3.
+    Lemma deq_evt_lst_trans : forall l1 l2 l3, deq_evt_lst l1 l2 -> deq_evt_lst l2 l3 -> deq_evt_lst l1 l3.
       unfold deq_evt_lst.
       intros.
       rewrite H, H0.
       reflexivity.
     Qed.
 
-    Instance deq_evt_lst_refl_equiv: Equivalence (deq_evt_lst).
+    #[global] Instance deq_evt_lst_refl_equiv: Equivalence (deq_evt_lst).
     Proof.
       constructor.
       - exact deq_evt_lst_refl.
@@ -177,6 +165,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
 
     Global Add Setoid (list Event) deq_evt_lst deq_evt_lst_refl_equiv as deq_evt_lst_setoid.
   End DEqLists.
+
 
   Section DleLists.
     Theorem dle_evt_lst_refl : forall l1, dle_evt_lst l1 l1.
