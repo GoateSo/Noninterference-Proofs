@@ -287,7 +287,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   End DeqTracePfx.
 
   Section DltTracePfx.
-    Lemma dlt_conseq : forall m p1 p2, dlt_pfx (m, p1) (m, p2) -> 
+    Lemma dlt_conseq : forall m1 m2 p1 p2, dlt_pfx (m1, p1) (m2, p2) -> 
       dle_evt_lst p1 p2 /\ ~ deq_evt_lst p1 p2.
       intros; unfold dlt_pfx, dle_pfx, deq_pfx in H.
       simpl in H; destruct H.
@@ -298,23 +298,123 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         split; assumption.
     Qed.
     
-    Lemma dlt_impl_prop_prefix :  forall m p1 p2, dlt_pfx (m, p1) (m, p2) ->
+    Lemma dlt_impl_prop_prefix :  forall m1 m2 p1 p2, deq_store m1 m2 ->  dlt_pfx (m1, p1) (m2, p2) ->
       PropPrefix (erase p1) (erase p2).
-      intros; apply dlt_conseq in H as [Hdle Hdeq].
+      intros.
+      apply dlt_conseq in H0 as [Hdle Hdeq].
       unfold dle_evt_lst, deq_evt_lst in *.
       split; assumption.
     Qed.
 
-    Lemma dlt_pfx_alt : forall m p1 p2, dlt_pfx (m, p1) (m, p2) -> exists a, ~ sil a /\ dle_evt_lst (p1 ++ [a]) p2.
+    Lemma dlt_pfx_alt : forall m1 m2 p1 p2, deq_store m1 m2 -> dlt_pfx (m1, p1) (m2, p2) -> exists a, ~ sil a /\ dle_evt_lst (p1 ++ [a]) p2.
       intros.
-      apply dlt_impl_prop_prefix in H.
+      apply (dlt_impl_prop_prefix m1 m2 p1 p2) in H.
       apply prop_prefix_exists_next in H as [a [Hpref Hpres]].
       exists a; split.
       - apply erase_in in Hpres. assumption.
       - unfold dle_evt_lst.
         apply erasure_inv.
         assumption.
+      - assumption.
     Qed.
+
+    Lemma dlt_pfx_alt2 : forall m1 m2 p1 p2, deq_store m1 m2 
+      -> dlt_pfx (m1, p1) (m2, p2) 
+      -> exists p2', PropPrefix p2' p2 /\ deq_evt_lst p1 p2'.
+      intros.
+      destruct H0 as [[Hpref _] Hneq]; simpl in *.
+      pose proof (dle_evt_lst_alt p1 p2 Hpref) as [p2' [Hpfx Hneq2]].
+      exists p2'; split.
+      - split; [assumption|].
+        intro Hbad.
+        subst.
+        apply Hneq.
+        split; assumption.
+      - assumption.
+    Qed.
+
+    Lemma find_first_kept : forall p, ~ deq_evt_lst p [] -> exists p_sil e p_rest,
+      p = p_sil ++ e :: p_rest 
+      /\ deq_evt_lst p_sil []
+      /\ ~ sil e.
+      induction p.
+      - intros; destruct H. reflexivity.
+      - intros.
+        destruct (sil_dec a) eqn:Heq.
+        + unfold deq_evt_lst, erase in H.
+          rewrite Heq in H.
+          unfold deq_evt_lst in IHp; simpl in IHp.
+          specialize (IHp H).
+          destruct IHp as [p_sil [e [p_rest [Hcompose [Hpsil Hnsil]]]]].
+          exists (a :: p_sil), e, p_rest; simpl.
+          unfold deq_evt_lst, erase.
+          rewrite <-Hcompose.
+          rewrite Heq.
+          split; try split; assumption.
+        + exists [], a, p.
+          simpl. 
+          split; try split; try assumption.
+          reflexivity.
+    Qed.
+
+    Lemma prefix_split { A : Type } : forall (p p' : list A), PropPrefix p p' -> exists p'', p' = p ++ p'' /\  [] <> p''.
+      intros.
+      destruct H.
+      induction H.
+      - exists lst; split; [ reflexivity | assumption ].
+      - destruct IHPrefix.
+        + intro Hbad.
+          destruct H0.
+          rewrite Hbad.
+          reflexivity.
+        + destruct H1. 
+          exists x; split; [| assumption].
+          rewrite H1.
+          reflexivity.
+    Qed. 
+
+    Lemma PropPrefix_nil_prod : forall p1 p2, PropPrefix (erase p1) (erase p2) ->
+      exists p2' e, PropPrefix p2' p2 /\ ~ sil e /\ Prefix (p2' ++ [e]) p2 /\ deq_evt_lst p1 p2'.
+      intros ? ? [Hpref Hneq].
+      unfold PropPrefix.
+      apply dle_evt_lst_alt in Hpref as [p2' [Hpref Hdeq]].
+      assert (PropPrefix p2' p2). {
+        split; [assumption|].
+        intro Hbad; subst.
+        apply Hneq; assumption.
+      }
+      assert (exists p2_suffix, p2 = p2' ++ p2_suffix /\ [] <> p2_suffix) as [p2suf [Hcompose Hnnil]]. {
+        apply prefix_split in H.
+        exact H.
+      }
+      assert (erase p2suf <> []). {
+        intro Hbad.
+        subst p2.
+        rewrite silent_split, Hbad, app_nil_r in Hneq.
+        apply Hneq.
+        assumption.
+      }
+      apply find_first_kept in H0 as [p_sil [e [p_rest [Hcompose2 [Hpsil Hnsil]]]]].
+      exists (p2' ++ p_sil), e.
+      subst.
+      split; try split; try split; try assumption.
+      - pose proof (app_prefix (p2' ++ p_sil) (e :: p_rest)).
+        rewrite <-app_assoc in H0.
+        assumption.
+      - rewrite <-(app_nil_r (p2' ++ p_sil)), app_assoc; simpl.
+        intro Hbad.
+        apply app_inv_head in Hbad.
+        inversion Hbad.
+      - rewrite <-app_assoc.
+        rewrite <-app_cons_middle with (ys:=p_rest).
+        pose proof (app_prefix (p2' ++ p_sil ++ [e]) (p_rest)).
+        rewrite <-app_assoc in H0. rewrite <-app_assoc in H0.
+        assumption.
+      - unfold deq_evt_lst in *.
+        rewrite silent_split.
+        rewrite Hpsil, app_nil_r.
+        assumption.
+    Qed. 
   End DltTracePfx.
 
   (* theorems for : atk_know p <= prog_know p <= atk_know (p ++ [a]) *)

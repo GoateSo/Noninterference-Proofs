@@ -7,7 +7,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import LangNotations.
 
   (* defn: reverse definition of trace pfx production -- in case it's still needed*)
-  Axiom trace_pfx_production_bkwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
+  (* Axiom trace_pfx_production_bkwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]). *)
   (* any finite trace prefix can be expanded to an infinite trace *)
   Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
   (* all configurations produce a trace *)
@@ -92,8 +92,33 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         + exists x; apply H5.
         + exists x0.
           apply (MultiStep_some (c, m) (c', m') x0); assumption. 
-    Qed.
+  Qed.
 
+  Lemma PropPrefix_production : forall p' p, PropPrefix p' p -> forall c m, (c,m)==>*[p] -> exists e, (c,m)==>*[p' ++ [e]].
+      unfold iter_trace_prod.
+      intros ? ? [HPref Hneq].
+      dependent induction HPref; intros.
+      - destruct lst.
+        + exfalso; apply Hneq; reflexivity.
+        + destruct H. inversion H; subst.
+          exists e, cs1.
+          exact (MultiStep_some (c, m) cs1 cs1 e [] H4 (MultiStep_refl cs1)).
+      - destruct H.
+        inversion H; subst.
+        destruct cs1 as (c', m').
+        assert (lst0 <> lst1). {
+          intro Hbad.
+          destruct Hneq.
+          rewrite Hbad.
+          reflexivity.
+        }
+        specialize (IHHPref H0 c' m').
+        destruct IHHPref. { exists x; assumption. }
+        destruct H1 as [(c'', m'') Hcompose].
+        exists x0, (c'', m''); simpl.
+        apply MultiStep_some with (cs1:=(c',m')); assumption.
+  Qed.  
+         
   Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
     intros.
     unfold "~~>", behavior in H; simpl in H.
