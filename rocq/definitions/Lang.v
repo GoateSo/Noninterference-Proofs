@@ -12,15 +12,16 @@ Class LanguageSemantics := {
   Event : Type; 
 
   (* decideability of command/store/event equality *)
+  (* TODO: thin these out when not needed *)
   cmd_eq_dec : EqDec Cmd; 
   mem_eq_dev : EqDec Store;
   evt_eq_dec : EqDec Event;
   
   (* progess : <c,s> --a-> <c', s'> *)
-  (* no step (gets stuck or terminates): <c,s> --/-> *)
   steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
-  can_step c s := exists e c' s', steps_to c s e c' s';
-  can_step_dec : forall c s, {can_step c s} + {~ can_step c s};
+  can_step c s := { ecs : (Event * Cmd * Store) | steps_to c s (fst (fst ecs)) (snd (fst ecs)) (snd ecs) };
+  (* either there's something it can step to, or there's nothing it can step to *)
+  can_step_dec c s : sum (can_step c s) (~ inhabited (can_step c s));
 }.
 
 Module Type LangDefs.
@@ -61,5 +62,7 @@ Module Type LangDefs.
     Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50).
     Notation "cs0 '==>*[' lst ']' cs1" := (MultiStep cs0 cs1 lst) (at level 50, no associativity) .
     Notation "cs0 '==>*[' lst ']'" := (iter_trace_prod cs0 lst) (at level 50, no associativity).
+    Notation no_step c s := (~ inhabited (can_step c s)).
+    Notation has_step c s := (inhabited (can_step c s)).
   End LangNotations.
 End LangDefs.

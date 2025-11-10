@@ -1,20 +1,42 @@
 Require Import Basic Lang Trace.
-From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles.
+From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Lists.Streams.
 Import ListNotations.
 
 Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import B LD TD.
   Import LangNotations.
 
-  (* any finite trace prefix can be expanded to an infinite trace *)
-  Axiom trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
-  (* all configurations produce a trace *)
-  Axiom univ_production : forall c m, exists st, c ~~> (m, st).
+  Lemma trace_dec_thm : forall t, t = t_dcom t.
+    intros; case t; simpl; auto.
+  Qed.
 
-  Theorem produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> can_step c s.
+  Lemma get_trace_prod : forall c m, Produces c m (getTrace c m).
+    cofix CH.
+    intros.
+    rewrite (trace_dec_thm (getTrace c m)); simpl.
+    destruct (can_step_dec c m) as [p_dec | p_no] eqn:Heq.
+    - destruct p_dec as [[[e c'] s'] Hstep].
+      simpl in *.
+      apply (Produces_step c m e c' s'); [assumption | ].
+      apply CH.
+    - apply No_production.
+      assumption. 
+  Qed.
+
+  (* all configurations produce a trace *)
+  Theorem univ_production : forall c m, exists st, c ~~> (m, st).
+    intros.
+    exists (getTrace c m).
+    unfold "~~>", behavior; simpl.
+    apply get_trace_prod.
+  Qed.
+
+  Lemma produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> inhabited (can_step c s).
     intros.
     unfold can_step.
-    eauto.
+    apply exists_to_inhabited_sig.
+    exists (e, c', s'); simpl.
+    assumption.
   Qed.
 
   Lemma lst_prefix_stream_prefix : forall lst0 lst1, Prefix lst0 lst1 -> forall st, EvtPrefix lst1 st -> EvtPrefix lst0 st.
@@ -64,6 +86,28 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     inversion Pfx0LeT as [? lst0 ? EvtPfx0] ; subst.
     inversion Pfx1LeT as [? lst1 ? EvtPfx1] ; subst.
     assert (Prefix lst0 lst1 \/ Prefix lst1 lst0) as [|] by eauto using pfx_from_same_trace_leq_help ; auto using LePfx_intro.
+  Qed.
+
+  (* any finite trace prefix can be expanded to an infinite trace *)
+  Theorem trace_max : forall c m p, (c, m)==>*[p] -> exists (t : EvtStream), (m, p) <=| (m, t) /\ c ~~>(m, t).
+    intros.
+    destruct H as [[c' s'] Hprod].
+    pose proof (get_trace_prod c' s').
+    exists (prepend p (getTrace c' s')).
+    split.
+    - constructor.
+      apply prefix_of_prepend.
+      apply prefix_preorder_inst.
+    - generalize dependent m.
+      revert c.
+      unfold "~~>", behavior; simpl.
+      induction p; intros.
+      + inversion Hprod; subst.
+        assumption.
+      + inversion Hprod; destruct cs1; subst.
+        apply (Produces_step _ _ _ c0 s); try assumption.
+        apply IHp in H5.
+        assumption.
   Qed.
 
   Lemma prefix_prod_mstep : forall lst c s st, Produces c s st
@@ -126,7 +170,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
 
   Ltac handle_prog_contradict :=
     lazymatch goal with
-      | [H : (~ (can_step ?c ?s)), H1 : (steps_to ?c ?s ?e ?c' ?s') |- _] => apply produce_impl_canstep in H1; contradiction
+      | [H : (no_step ?c ?s), H1 : (steps_to ?c ?s ?e ?c' ?s') |- _] => apply produce_impl_canstep in H1; contradiction
       | [H : steps_to_combined _ _ _ |- _] => unfold steps_to_combined in H; handle_prog_contradict
     end.
 End TraceTheories.

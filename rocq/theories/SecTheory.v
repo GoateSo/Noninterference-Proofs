@@ -11,7 +11,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   Ltac list_rev_ind xs := induction xs using rev_ind.
 
   Section SilentProperties.
-    Theorem silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
+    Lemma silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
       intros.
       induction l1 ; [reflexivity|].
       simpl; destruct (sil_dec a); try assumption.
@@ -168,7 +168,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
 
 
   Section DleLists.
-    Theorem dle_evt_lst_refl : forall l1, dle_evt_lst l1 l1.
+    Lemma dle_evt_lst_refl : forall l1, dle_evt_lst l1 l1.
       intros.
       unfold dle_evt_lst.
       induction l1; [reflexivity | ].
@@ -176,7 +176,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       destruct (sil_dec a); auto.
     Qed.
 
-    Theorem dle_evt_lst_trans : forall l1 l2 l3, dle_evt_lst l1 l2 -> dle_evt_lst l2 l3 -> dle_evt_lst l1 l3.
+    Lemma dle_evt_lst_trans : forall l1 l2 l3, dle_evt_lst l1 l2 -> dle_evt_lst l2 l3 -> dle_evt_lst l1 l3.
       unfold dle_evt_lst.
       intros.
       pose proof (@prefix_preorder_inst Event) as [_ Htrans].

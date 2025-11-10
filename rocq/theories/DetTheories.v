@@ -67,6 +67,8 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
           * rewrite pair_equal_spec in H3; destruct H3; subst;
             apply (CH c'0 s'0 st st0); assumption.
       - apply produce_impl_canstep in H1.
+        unfold no_step in H6.
+        unfold can_step in H1.
         contradiction.
       - apply produce_impl_canstep in H5.
         contradiction.
@@ -79,7 +81,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
         | [H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
           => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
         | [H0 : ?cs -->[?a0] ?cs0, H1 : steps_to_combined ?cs ?a1 ?cs1 |- _]
-          => unfold steps_to_combined in H1; assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+          => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
       end.
 
     Lemma evt_prefix_prod_both : forall lst st0, EvtPrefix lst st0 -> forall c s st1, Produces c s st0 -> Produces c s st1 -> EvtPrefix lst st1.
@@ -125,7 +127,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
     Qed.
 
     Lemma prod_conv_prefix : forall lst st, EvtPrefix lst st
-        -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ ~ can_step c' s'
+        -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ no_step c' s'
         -> Produces c s st
         -> Prefix lst lst'.
         intros lst st EvtPfx. induction EvtPfx ; intros c s c' s' lst' Conv Prod ; auto.
