@@ -388,5 +388,12 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         apply (prefix_prefix_prod l1a (l1a ++ a' :: ls)); assumption.
       - unfold deq_evt_lst; auto.
     Qed.
+
+    Lemma atk_next_impl_prog_knowledge: forall c m p e, (c, m) ==>*[p ++ [e]] -> ~ sil e -> Included Store (atk_knowledge c m (p ++ [e])) (prog_knowledge c m p).
+      intros ? ? ? ? Hpeprod Hnsil m' [Hmdeq [p' [Hpprod Hpedeq]]].
+      split; [assumption|].
+      exists p', e.
+      auto.
+    Qed.
   End SubKnowledge. 
 End SecurityTheory.

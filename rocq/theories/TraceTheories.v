@@ -31,9 +31,9 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     apply get_trace_prod.
   Qed.
 
-  Lemma produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> inhabited (can_step c s).
+  Lemma produce_impl_canstep : forall c s e c' s', (c, s) -->[e] (c', s') -> can_step c s.
     intros.
-    unfold can_step.
+    unfold has_step.
     apply exists_to_inhabited_sig.
     exists (e, c', s'); simpl.
     assumption.

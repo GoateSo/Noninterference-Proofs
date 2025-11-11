@@ -25,13 +25,9 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
         h1 = h2 ->
         Eq_EvtSt t1 t2 ->
         Eq_EvtSt (ConsEvt h1 t1) (ConsEvt h2 t2).
-
-    Definition getNext c s (proof : can_step c s) := match proof with
-      |  (exist _ step _) => step
-    end.
     
     CoFixpoint getTrace c s: EvtStream := match (can_step_dec c s) with
-      | inl p => let '(e,c',s') := (getNext c s p) in ConsEvt e (getTrace c' s')
+      | inl (exist _ (e,c',s') _) => ConsEvt e (getTrace c' s')
       | inr _ => NoProgress
     end.
 

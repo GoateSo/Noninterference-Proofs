@@ -68,7 +68,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
             apply (CH c'0 s'0 st st0); assumption.
       - apply produce_impl_canstep in H1.
         unfold no_step in H6.
-        unfold can_step in H1.
+        unfold has_step in H1.
         contradiction.
       - apply produce_impl_canstep in H5.
         contradiction.
