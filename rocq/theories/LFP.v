@@ -83,7 +83,7 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       eauto.
     Qed.
 
-    Theorem klfp_det_impl_hlfp : forall c, In Cmd KLfpD c 
+    Theorem Klfp_det_impl_Hlfp : forall c, In Cmd KLfpD c 
       -> (det_rel steps_to_combined)
       -> In Property HLfpD (behavior c).  
       intros ? HKlfp one_step_det.

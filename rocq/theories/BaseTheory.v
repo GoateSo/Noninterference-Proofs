@@ -327,7 +327,7 @@ Module Type BaseTheories (B : Basic).
         destruct IHl2; [subst lst0|]; auto.
     Qed.
 
-    Theorem prop_prefix_app_implies_prefix :
+    Lemma prop_prefix_app_implies_prefix :
       forall (l1 l2 : list A) (x : A),
         PropPrefix l1 (l2 ++ [x]) ->
         Prefix l1 l2.

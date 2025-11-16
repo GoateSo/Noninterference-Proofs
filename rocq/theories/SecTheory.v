@@ -175,7 +175,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       - rewrite silent_split, nsil_sing; try assumption.
     Qed.
 
-    Theorem silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
+    Lemma silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
       intros.
       split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
       - rewrite silent_split; simpl.
@@ -280,7 +280,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
               reflexivity.
     Qed.
 
-    Theorem dle_evt_lst_alt : 
+    Lemma dle_evt_lst_alt : 
       forall (l1 l2 : list Event), 
         dle_evt_lst l1 l2 -> 
         exists l2', Prefix l2' l2 /\ deq_evt_lst l1 l2'.

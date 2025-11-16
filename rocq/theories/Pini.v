@@ -36,8 +36,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           assumption.
       }
       exists p'.
-      split; try assumption.
-      congruence.
+      split; [assumption | congruence].
     Qed.
 
     Theorem Hpini_impl_KPini : forall c, In Property HPiniD (behavior c) -> In Cmd KPiniD c.
@@ -47,8 +46,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         split; [assumption|].
         pose proof Hpini_conseq c HPiniD m m' p e.
         specialize (H Hnsil Hdeq Hprod).
-        destruct H as [ps [Hpsprod Hpsdeq]]; [eauto |].
-        eauto.
+        destruct H as [ps [Hpsprod Hpsdeq]]; eauto.
       - apply atk_next_impl_prog_knowledge; assumption.
     Qed.
 
@@ -66,9 +64,8 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           symmetry in H5.
           contradiction.
         + inversion H0.
-      - intros.
-        apply le_n_S.
-        simpl in H0, IHp1.
+      - apply le_n_S.
+        simpl in *.
         destruct H1, H2.
         inversion H1. inversion H2.
         pose proof (H (c,m) cs1 cs4 a e H7 H13) as [Hdet_Conf_eq Hdet_evt_eq].
@@ -83,22 +80,22 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           * exists (c3, s2); assumption.
           * reflexivity.
           * auto using le_S.
-      + assert (PropPrefix (erase p1) (erase p2)). {
-          destruct H0.
-          inversion H0; subst.
-          split.
-          - assumption.
-          - intro Hbad.
-            rewrite Hbad in H3.
-            apply H3.
-            reflexivity.    
-        }
-        specialize (IHp1 H3).
-        destruct IHp1.
-          * exists (c2, s1); assumption.
-          * exists (c3, s2); assumption.
-          * reflexivity.
-          * auto using le_S.
+        + assert (PropPrefix (erase p1) (erase p2)). {
+            destruct H0.
+            inversion H0; subst.
+            split.
+            - assumption.
+            - intro Hbad.
+              rewrite Hbad in H3.
+              apply H3.
+              reflexivity.    
+          }
+          specialize (IHp1 H3).
+          destruct IHp1.
+            * exists (c2, s1); assumption.
+            * exists (c3, s2); assumption.
+            * reflexivity.
+            * auto using le_S.
     Qed.
 
     Lemma det_dlt_same_config_impl_propprefix : forall p1 p2 c m ,
@@ -121,7 +118,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         reflexivity.
     Qed. 
        
-    Lemma monkas : forall c m p e, (c, m) ==>*[p ++ [e]] -> exists cs' cs'', (c, m) ==>*[p] cs' /\ cs' -->[e] cs''.
+    Lemma multistep_tail : forall c m p e, (c, m) ==>*[p ++ [e]] -> exists cs' cs'', (c, m) ==>*[p] cs' /\ cs' -->[e] cs''.
       intros.
       generalize dependent m.
       revert c.
@@ -135,9 +132,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         + exists x; assumption.
         + destruct H0 as [[c2 m2] [HprodStart HprodEnd]].
           exists x0, (c2, m2).
-          split.
-          * apply MultiStep_some with (cs1:=(c1,m1)); assumption.
-          * assumption.
+          split; [apply MultiStep_some with (cs1:=(c1,m1))|]; assumption.
     Qed.
 
     Lemma kpini_conseq : forall c m1 m2 p1 p2 e1 e2, 
@@ -155,8 +150,8 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       destruct (HKpini p2 m2 e2) as [HKpinil _]; try assumption.
       specialize (HKpinil m1).
       unfold Included, In in HKpinil.
-      apply monkas in Hprod1 as [cs1' [cs1'' [Hp1Start Hp1End]]].
-      apply monkas in Hprod2 as [cs2' [cs2'' [Hp2Start Hp2End]]].
+      apply multistep_tail in Hprod1 as [cs1' [cs1'' [Hp1Start Hp1End]]].
+      apply multistep_tail in Hprod2 as [cs2' [cs2'' [Hp2Start Hp2End]]].
       destruct HKpinil as [_ [p' [Hpprod Hdeqpp]]]. {
         split.
         + apply deq_store_equiv in Hmdeq.
@@ -179,30 +174,23 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       pose proof det_dlt_same_config_impl_propprefix as Hdet_ppref.
       specialize (Hdet_ppref p1 p' c m1 one_step_det Hppref).
       destruct (Hdet_ppref); clear Hdet_ppref.
-      - exists (cs1').
-        assumption.
+      - exists (cs1');assumption.
       - assumption.
       - assert (PropPrefix p1 p'). { split; assumption. }
         clear H H0.
         apply (PropPrefix_production p1 p' H1) in Hpprod as [evt [Hnpref Hnprod]].
-        apply monkas in Hnprod as [cs3' [cs3'' [Hp3Start Hp3End]]].
+        apply multistep_tail in Hnprod as [cs3' [cs3'' [Hp3Start Hp3End]]].
         assert (cs1' = cs3'). {
           apply (det_prod_impl_same one_step_det p1 c m1); assumption.
         }
         subst.
-        unfold det_rel, steps_to_combined in one_step_det.
         specialize (one_step_det cs3' cs1'' cs3'' e1 evt).
         destruct one_step_det; try assumption.
         subst.
         apply (pref_impl_dle (p1 ++ [evt]) p') in Hnpref.
-        rewrite Hdeqpp in Hnpref.
-        rewrite ?silent_split in Hnpref.
-        rewrite ?nsil_sing in Hnpref; try assumption.
-        rewrite Hpdeq in Hnpref.
+        rewrite Hdeqpp, ?silent_split,?nsil_sing, Hpdeq in Hnpref; try assumption.
         apply prefix_first_eq_last_eq in Hnpref.
-        rewrite ?silent_split.
-        rewrite Hpdeq.
-        rewrite Hnpref.
+        rewrite ?silent_split, Hpdeq, Hnpref.
         reflexivity.
     Qed.
 
@@ -260,7 +248,6 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         apply Nat.lt_irrefl in H_len_lt.
         assumption.
       }
-      clear IHpx1.
       subst px1 px2.
       destruct Hkpini.
       - split; [assumption|].

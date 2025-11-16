@@ -8,14 +8,14 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
   Import B LD TD DD TT.
   Import LangNotations.
 
-  Theorem Eq_EvtSt_refl : forall s: EvtStream, Eq_EvtSt s s.
+  Lemma Eq_EvtSt_refl : forall s: EvtStream, Eq_EvtSt s s.
     cofix CH.
     intros.
     destruct s; constructor; try reflexivity.
     apply CH.
   Qed.
 
-  Theorem Eq_EvtSt_sym : forall s1 s2: EvtStream, Eq_EvtSt s1 s2 -> Eq_EvtSt s2 s1.
+  Lemma Eq_EvtSt_sym : forall s1 s2: EvtStream, Eq_EvtSt s1 s2 -> Eq_EvtSt s2 s1.
     cofix CH.
     intros.
     destruct H; [apply Eq_EvtSt_refl | constructor].
@@ -24,7 +24,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       assumption.
   Qed.
 
-  Theorem Eq_EvtSt_trans : forall s1 s2 s3 : EvtStream, Eq_EvtSt s1 s2 -> Eq_EvtSt s2 s3 -> Eq_EvtSt s1 s3.
+  Lemma Eq_EvtSt_trans : forall s1 s2 s3 : EvtStream, Eq_EvtSt s1 s2 -> Eq_EvtSt s2 s3 -> Eq_EvtSt s1 s3.
     cofix CH.
     intros ? ? ? H12 H23.
     destruct H12 eqn:Heqn.
