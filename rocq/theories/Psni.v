@@ -29,7 +29,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           exists p2.
           split.
           + inversion Hpfx; subst.
-            apply (trace_pfx_production_fwd c m2 s2); assumption.
+            trace_prefix_prod c m2 p2; assumption.
           + assumption.
       - destruct H1.
         assumption.
@@ -56,11 +56,11 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       pose proof (hpsni_memset_invariance c HHPsniD m) as Hinv.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
         apply (prefix_prefix_prod p (p ++ [a]) (app_prefix p [a])) in H.
-        apply (trace_max c m p) in H as [st [Hepfx Htprod]]. 
+        get_max_trace c m p [st [Hpfx Htprod]].
         apply Hinv with st; assumption.
       }
       assert (Same_set Store (indistincts c m) (atk_knowledge c m (p ++ [a]))). {
-        apply (trace_max c m (p ++ [a])) in H as [st [Hepfx Htprod]].
+        get_max_trace c m (p ++ [a]) [st [Hepfx Htprod]].
         apply Same_set_sym.
         apply Hinv with st; assumption.
       }
@@ -91,7 +91,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
             unfold deq_evt_lst in Hp2Deq.
             rewrite app_nil_r.
             assumption.
-          * apply (trace_pfx_production_fwd c m1 s1) in H0; try assumption.
+          * trace_prefix_prod c m1 (p1 ++ [x]).
             destruct (HKPsni p1 m1 x) as [H4 _]; try assumption.
             unfold Included, In, atk_knowledge in H4.
             pose proof H4 m2 as H4ak; clear H4.
@@ -115,7 +115,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       inversion Hpsub; subst.
       apply (Hprod p1) in Hpsub.
       destruct Hpsub as [p2 [Hp2prod Hp2deq]].
-      pose proof trace_max c m2 p2 Hp2prod as [stp2 [Hp2pfx Ht2prod]].
+      get_max_trace c m2 p2 [stp2 [Hp2pfx Ht2prod]].
       exists (m2, p2).
       split.
       - pose proof det_trace_pfx_production one_step_det c m2 st2 H0 p2.

@@ -19,8 +19,8 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
     -> (exists p', ((c, m') ==>*[p'] /\ deq_evt_lst p p')) 
     -> (exists p2 a', ((c, m') ==>*[p2] /\ deq_evt_lst p2 (p ++ [a']) /\ ~ sil a')).
       intros ? HHLfpD ? ? ? [Hpaprod Hnsil] ? Hdeq [p' [Hpprod Hpdeq]].
-      pose proof trace_max c m (p ++ [a]) Hpaprod as [st1 [Htpref1 Htprod1]]. 
-      pose proof trace_max c m' (p') Hpprod as [st2 [Htpref2 Htprod2]]. 
+      get_max_trace c m (p ++ [a]) [st1 [Htpref1 Htprod1]].
+      get_max_trace c m' p' [st2 [Htpref2 Htprod2]].
       specialize (HHLfpD (m', st2) (m, st1) Htprod2 Htprod1 (m', p') (m, p ++ [a])  Htpref2 Htpref1). 
       inversion Htpref1; inversion Htpref2; subst.
       destruct HHLfpD as [[? p2] [Hres1 Hres2]]. {
@@ -46,7 +46,7 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       inversion Hres1; subst.
       apply dlt_pfx_alt in Hres2 as [a' [Hnsila' Hdeqpa']].
       pose proof dle_evt_lst_alt (p'++[a']) p2 Hdeqpa' as [p'' [Hppref Hppdeq]].
-      pose proof trace_pfx_production_fwd c m' st2 Htprod2 p2 Hres1 as Hp2prod.
+      trace_prefix_prod c m' p2 Hp2prod.
       apply prefix_prefix_prod with (p':=p'')in Hp2prod; try assumption.
       exists p'',a'.
       split; try split; try assumption.
@@ -90,8 +90,8 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       intros t1 t2 Ht1Prod Ht2Prod p1 p2 Hp1tpfx Hp2tpfx.
       destruct t1 as [m1 t1], t2 as [m2 t2], p1 as [mp1 p1], p2 as [mp2 p2].
       inversion Hp1tpfx. inversion Hp2tpfx; subst.
-      pose proof trace_pfx_production_fwd c m1 t1 Ht1Prod p1 Hp1tpfx.
-      pose proof trace_pfx_production_fwd c m2 t2 Ht2Prod p2 Hp2tpfx.
+      trace_prefix_prod c m1 p1.
+      trace_prefix_prod c m2 p2.
       intro Hdlt.
       pose proof Hdlt as Hdlt'.
       destruct Hdlt as [Hdlepfx Hneq].

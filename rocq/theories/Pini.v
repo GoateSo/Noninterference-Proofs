@@ -20,8 +20,8 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       -> exists pp, (c, m')==>*[pp] /\ deq_evt_lst (p ++ [e]) pp.
       intros. 
       destruct H3 as [p' [e' [Hnsil [Hprod' Hdeq']]]].
-      pose proof trace_max c m (p ++ [e]) H2 as [st [Hpfx Htprod]].
-      pose proof trace_max c m' p' Hprod' as [st' [Hpfx' Htprod']].
+      get_max_trace c m (p ++ [e]) [st [Hpfx Htprod]].
+      get_max_trace c m' p' [st' [Hpfx' Htprod']].
       inversion Hpfx; inversion Hpfx'; subst.
       unfold In, HPiniD in H.
       specialize (H (m,st) (m',st') Htprod Htprod' H1).
@@ -58,11 +58,9 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       -> (c, m) ==>*[p1] 
       -> (c, m) ==>*[p2]
       -> length p1 <= length p2.
-      induction p1, p2; simpl; auto.
-      - intros. 
-        apply le_0_n.
-      - intros.
-        destruct H0.
+      induction p1, p2; simpl; auto; intros.
+      - apply le_0_n.
+      - destruct H0.
         destruct (sil_dec a).
         + inversion H0; subst.
           symmetry in H5.
@@ -316,8 +314,8 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         simpl in *.
         inversion Htpref1. inversion Htpref2.
         subst.
-        pose proof trace_pfx_production_fwd c m1 st1 Htprod1 p1 Htpref1.
-        pose proof trace_pfx_production_fwd c m2 st2 Htprod2 p2 Htpref2.
+        trace_prefix_prod c m1 p1.
+        trace_prefix_prod c m2 p2.
         remember (erase p1) as px1.
         remember (erase p2) as px2. 
         destruct (Compare.le_dec (length px1) (length px2)).

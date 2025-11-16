@@ -8,8 +8,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   Import B BT LD TD SP SD TT.
   Import LangNotations.
 
-  Create HintDb erase_db.
-
   Ltac list_rev_ind xs := induction xs using rev_ind.
 
   Section SilentProperties.
@@ -20,29 +18,18 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       rewrite IHl1.
       reflexivity.
     Qed. 
-    Hint Rewrite silent_split : erase_db. 
 
     Lemma sil_sing : forall a, sil a -> erase [a] = [].
       intros; simpl.
       destruct (sil_dec a); try contradiction.
       reflexivity.
     Qed.
-    Hint Rewrite sil_sing : erase_db.
 
     Lemma nsil_sing : forall a, ~ sil a -> erase [a] = [a].
       intros; simpl.
       destruct (sil_dec a); try contradiction.
       reflexivity.
     Qed.
-    Hint Rewrite nsil_sing : erase_db.
-
-    Lemma erase_nil : erase [] = [].
-      reflexivity. 
-    Qed.
-    Hint Rewrite erase_nil : erase_db.
-
-    Ltac simpl_erase :=
-    repeat (simpl in *; autorewrite with erase_db in *).
 
     Lemma silent_decomp : forall l1 l2 e, ~ sil e 
       -> erase l1 = erase l2 
@@ -149,7 +136,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           rewrite IHp.
           reflexivity.
     Qed.
-    Hint Rewrite erase_idemp : erase_db.
 
     Lemma silent_break_2 : forall l1 l2 e, erase l1 = l2 ++ [e] 
       -> exists l1a ls, 
@@ -230,7 +216,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
 
     Global Add Setoid (list Event) deq_evt_lst deq_evt_lst_refl_equiv as deq_evt_lst_setoid.
   End DEqLists.
-
 
   Section DleLists.
     Lemma dle_evt_lst_refl : forall l1, dle_evt_lst l1 l1.

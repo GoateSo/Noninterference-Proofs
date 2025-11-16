@@ -180,4 +180,20 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
       | [H : (no_step ?c ?s), H1 : (steps_to ?c ?s ?e ?c' ?s') |- _] => apply produce_impl_canstep in H1; contradiction
       | [H : steps_to_combined _ _ _ |- _] => unfold steps_to_combined in H; handle_prog_contradict
     end.
+
+  Ltac get_max_trace c m p pat := lazymatch goal with
+    | [Hpprod : (c,m)==>*[p] |- _] => let H := fresh in
+      destruct (trace_max c m p Hpprod) as pat
+  end.
+
+  Tactic Notation "get_max_trace" constr(c) constr(m) constr(p) simple_intropattern(pat) := get_max_trace c m p pat.
+  Tactic Notation "get_max_trace" constr(c) constr(m) constr(p) := let pat := fresh in get_max_trace c m p pat.
+
+  Ltac trace_prefix_prod c m p name := lazymatch goal with
+    | [Hbehav : c ~~> (m, ?st), Htpref : (m, p) <=| (m, ?st) |- _] => 
+      pose proof trace_pfx_production_fwd c m st Hbehav p Htpref as name
+  end. 
+   
+  Tactic Notation "trace_prefix_prod" constr(c) constr(m) constr(p) ident(name) := trace_prefix_prod c m p name.
+  Tactic Notation "trace_prefix_prod" constr(c) constr(m) constr(p) := let H := fresh in trace_prefix_prod c m p H.
 End TraceTheories.
