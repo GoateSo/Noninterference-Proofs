@@ -68,7 +68,8 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
     Qed.
 
     Lemma KLfP_conseq : forall c m p e, In Cmd KLfpD c
-      -> ~sil e -> (c,m)==>*[p ++ [e]]
+      -> ~sil e 
+      -> (c,m)==>*[p ++ [e]]
       -> forall m', deq_store m m' 
       -> (exists p', (c,m')==>*[p'] /\ deq_evt_lst p p') 
       -> (exists px e, deq_evt_lst px (p ++ [e]) /\ ~sil e /\ (c,m')==>*[px]).

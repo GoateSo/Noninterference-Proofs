@@ -8,6 +8,8 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   Import B BT LD TD SP SD TT.
   Import LangNotations.
 
+  Create HintDb erase_db.
+
   Ltac list_rev_ind xs := induction xs using rev_ind.
 
   Section SilentProperties.
@@ -18,18 +20,29 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       rewrite IHl1.
       reflexivity.
     Qed. 
+    Hint Rewrite silent_split : erase_db. 
 
     Lemma sil_sing : forall a, sil a -> erase [a] = [].
       intros; simpl.
       destruct (sil_dec a); try contradiction.
       reflexivity.
     Qed.
+    Hint Rewrite sil_sing : erase_db.
 
     Lemma nsil_sing : forall a, ~ sil a -> erase [a] = [a].
       intros; simpl.
       destruct (sil_dec a); try contradiction.
       reflexivity.
     Qed.
+    Hint Rewrite nsil_sing : erase_db.
+
+    Lemma erase_nil : erase [] = [].
+      reflexivity. 
+    Qed.
+    Hint Rewrite erase_nil : erase_db.
+
+    Ltac simpl_erase :=
+    repeat (simpl in *; autorewrite with erase_db in *).
 
     Lemma silent_decomp : forall l1 l2 e, ~ sil e 
       -> erase l1 = erase l2 
@@ -80,7 +93,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           split; [|split].
           * rewrite <-app_cons_middle in *.
             rewrite <-Hcompose.
-            repeat rewrite <- app_assoc.
+            rewrite <- ?app_assoc.
             reflexivity.
           * exact Hdeq1.
           * rewrite silent_split, sil_sing, Hdeq2; try assumption.
@@ -94,13 +107,13 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         + rewrite silent_split, (sil_sing x), app_nil_r in H0; try assumption.
           specialize (IHl1 (l2 ++ [x0]) e H H0) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
           exists l1a, (ls ++ [x]).
-          repeat rewrite silent_split.
+          rewrite ?silent_split.
           rewrite (sil_sing x), app_nil_r; try assumption.
           rewrite <-Hcompose, <-app_assoc, app_comm_cons.
           rewrite silent_split in Hdeq1.
           split; try split; try assumption.
         + destruct (sil_dec x0).
-          * repeat rewrite silent_split in H0. 
+          * rewrite ?silent_split in H0. 
             rewrite (sil_sing x0), (nsil_sing x), (nsil_sing e), app_nil_r in H0; try assumption.
             apply app_inj_tail in H0 as [Ha Hb]; subst.
             exists l1, [].
@@ -112,6 +125,58 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
             specialize (IHl1 l2 x0 n0 Ha) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
             subst; clear n.
             eauto.
+    Qed.
+
+    Lemma in_erase_impl_nsil : forall e p, List.In e (erase p) -> ~ sil e.
+      intros.
+      induction p.
+      - inversion H.
+      - simpl in H.
+        destruct (sil_dec a).
+        + exact (IHp H).
+        + inversion H.
+          * subst.
+            assumption.
+          * exact (IHp H0).
+    Qed.
+
+    Lemma erase_idemp : forall p, erase (erase p) = erase p.
+      induction p.
+      - auto.
+      - destruct (sil_dec a) eqn:Heq; simpl; rewrite Heq.
+        + apply IHp.
+        + simpl; rewrite Heq.
+          rewrite IHp.
+          reflexivity.
+    Qed.
+    Hint Rewrite erase_idemp : erase_db.
+
+    Lemma silent_break_2 : forall l1 l2 e, erase l1 = l2 ++ [e] 
+      -> exists l1a ls, 
+          l1a ++ (e :: ls) = l1 
+          /\ erase l1a = l2 
+          /\ erase ls = [].
+      intros.
+      pose proof in_elt e (l2) [].
+      rewrite <-H in H0.
+      apply in_erase_impl_nsil in H0.
+      assert (erase (l2 ++ [e]) = l2 ++ [e]). {
+        assert (erase (erase l1) = erase (l2 ++ [e])). {
+          exact (f_equal erase H).
+        }
+        rewrite erase_idemp in H1.
+        rewrite <-H1, <-H.
+        reflexivity.
+      }
+      assert (erase l2 = l2). {
+        rewrite silent_split, nsil_sing in H1; try assumption.
+        apply app_inj_tail in H1.
+        destruct H1.
+        auto.
+      }
+      rewrite <-H1 in H.
+      rewrite <-H2.
+      apply (silent_break l1 l2 e); assumption.
     Qed.
 
     Lemma erasure_inv : forall p a p2, Prefix ((erase p) ++ [a]) p2 -> Prefix (erase (p ++ [a])) p2.
@@ -182,6 +247,25 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       pose proof (@prefix_preorder_inst Event) as [_ Htrans].
       unfold Transitive in Htrans.
       apply (Htrans (erase l1) (erase l2) (erase l3)); assumption.
+    Qed.
+
+    Lemma pref_impl_dle : forall p1 p2, Prefix p1 p2 -> Prefix (erase p1) (erase p2).
+      induction p2 using rev_ind; intros.
+      - inversion H.
+        reflexivity.
+      - pose proof prefix_of_append p1 (p2 ++ [x]) [].
+        rewrite app_nil_r in H0.
+        apply H0 in H; clear H0.
+        destruct H.
+        + apply prop_prefix_app_implies_prefix in H.
+          apply IHp2 in H.
+          rewrite silent_split.
+          apply prefix_app.
+          assumption.
+        + destruct H as [lst [H1 H2]].
+          inversion H2; subst.
+          rewrite app_nil_r in *.
+          apply prefix_preorder_inst.
     Qed.
 
     Lemma gen_prefix_erase_exists : 

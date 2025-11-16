@@ -116,6 +116,71 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       eauto.
     Qed. 
 
+    Lemma length_impl_split : forall (p1 p2 : list Event), length p1 <= length p2 -> exists p1', length (p1 ++ p1') = length p2.
+      intros.
+      induction p2 using rev_ind.
+      - inversion H.
+        exists [].
+        simpl.
+        rewrite app_nil_r.
+        assumption.
+      - rewrite (PeanoNat.Nat.lt_eq_cases (length p1) (length (p2 ++ [x]))) in H .
+        destruct H.
+        + rewrite last_length in H.
+          apply Arith_base.lt_n_Sm_le_stt in H.
+          specialize (IHp2 H) as [p1' Heq].
+          exists (p1' ++ [x]).
+          rewrite app_assoc, last_length, last_length.
+          auto.
+        + exists [].
+          rewrite app_nil_r, H.
+          reflexivity.
+    Qed.
+    
+    Lemma det_prod_impl_same : forall p c m cs1 cs2,
+      (c, m) ==>*[p] cs1 
+      -> (c, m) ==>*[p] cs2
+      -> cs1 = cs2.
+      induction p; intros; inversion H; inversion H0; subst.
+      - reflexivity.
+      - unfold det_rel, steps_to_combined in Det.
+        specialize (Det (c,m) cs3 cs6 a a H5 H11) as [Hceq _].
+        subst.
+        destruct cs6.
+        specialize (IHp c0 s cs1 cs2 H6 H12).
+        assumption.
+    Qed.
+
+    Lemma det_prod_impl_prefix : forall p1 p2 c m,
+      (length p1) <= (length p2)
+      -> (c, m) ==>*[p1]
+      -> (c, m) ==>*[p2]
+      -> Prefix p1 p2.
+      induction p1, p2; auto; intros.
+      - simpl in H.
+        apply PeanoNat.Nat.nle_succ_0 in H.
+        exfalso.
+        apply H.
+      - destruct H0, H1.
+        inversion H0. inversion H1.
+        subst.
+        unfold det_rel, steps_to_combined in Det.
+        pose proof (Det (c, m) cs1 cs4 a e) as one_step_det.
+        specialize (one_step_det H6 H12) as [HeqConf HdeqE].
+        rewrite HdeqE.
+        apply Prefix_some.
+        simpl in H.
+        apply le_S_n in H.
+        destruct cs1 as [c' m']; subst.
+        specialize (IHp1 p2 c' m' H).
+        destruct IHp1.
+        + exists x. assumption.
+        + exists x0. assumption.
+        + auto.
+        + apply Prefix_some.
+          assumption.
+    Qed.
+
     Lemma prod_mstep_prefix : forall lst c s st cs, Produces c s st
         -> (c, s) ==>*[lst] cs
         -> EvtPrefix lst st.

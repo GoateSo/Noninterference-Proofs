@@ -136,14 +136,16 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
           apply (MultiStep_some (c, m) (c', m') x0); assumption. 
   Qed.
 
-  Lemma PropPrefix_production : forall p' p, PropPrefix p' p -> forall c m, (c,m)==>*[p] -> exists e, (c,m)==>*[p' ++ [e]].
+  Lemma PropPrefix_production : forall p' p, PropPrefix p' p -> forall c m, (c,m)==>*[p] -> exists e, Prefix (p' ++ [e]) p /\ (c,m)==>*[p' ++ [e]].
       unfold iter_trace_prod.
       intros ? ? [HPref Hneq].
       dependent induction HPref; intros.
       - destruct lst.
         + exfalso; apply Hneq; reflexivity.
         + destruct H. inversion H; subst.
-          exists e, cs1.
+          exists e.
+          split; simpl; auto.
+          exists cs1.
           exact (MultiStep_some (c, m) cs1 cs1 e [] H4 (MultiStep_refl cs1)).
       - destruct H.
         inversion H; subst.
@@ -156,9 +158,14 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         }
         specialize (IHHPref H0 c' m').
         destruct IHHPref. { exists x; assumption. }
-        destruct H1 as [(c'', m'') Hcompose].
-        exists x0, (c'', m''); simpl.
-        apply MultiStep_some with (cs1:=(c',m')); assumption.
+        destruct H1 as [Hpref [(c'', m'') Hcompose]].
+        exists x0.
+        split.
+        + rewrite <-app_comm_cons.
+          constructor.
+          assumption.
+        + exists (c'', m''); simpl.
+          apply MultiStep_some with (cs1:=(c',m')); assumption.
   Qed.  
          
   Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).

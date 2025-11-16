@@ -84,6 +84,19 @@ Module Type BaseTheories (B : Basic).
         - apply le_S_n in ltn, ltm1. pose proof (IHm0 m1 ltm1 n ltn).
           simpl. assumption.
     Qed.
+
+    Lemma S_n_le_n_le : forall a b, S a <= b -> a <= b.
+      intros.
+      destruct b.
+      - inversion H.
+      - apply le_S.
+        apply le_S_n in H.
+        assumption.
+    Qed.
+
+    Lemma S_le_impl_lt : forall n m, S n <= m -> n < m.
+      auto.
+    Qed.
   End NatProps.
 
   Section ListPrefix.
@@ -168,9 +181,7 @@ Module Type BaseTheories (B : Basic).
           destruct H as [? [? ?]].
           right. 
           exists (a :: x), x0.
-          rewrite <-app_comm_cons.
-          rewrite H.
-          reflexivity.
+          simpl; congruence.
     Qed.  
 
     Lemma cons_neq : forall (lst : list A) (a : A), lst <> a :: lst.
@@ -263,12 +274,69 @@ Module Type BaseTheories (B : Basic).
       - destruct IHPrefix.
         + intro Hbad.
           destruct H0.
-          rewrite Hbad.
-          reflexivity.
+          congruence.
         + destruct H1. 
           exists x; split; [| assumption].
-          rewrite H1.
-          reflexivity.
+          simpl; congruence.
     Qed. 
+
+    Lemma pref_le_len: forall (l l' : list A), Prefix l l' -> length l <= length l'.
+      intros; induction H; simpl.
+      - apply le_0_n.
+      - apply le_n_S; assumption.
+    Qed.
+
+    Lemma prefix_of_compose : forall (zs xs ys : list A), (xs ++ ys) = zs -> Prefix xs zs.
+      induction zs; intros.
+      - apply app_eq_nil in H as [H1 H2]; subst.
+        apply prefix_preorder_inst.
+      - destruct xs.
+        + auto.
+        + simpl in H.
+          inversion H.
+          rewrite app_comm_cons.
+          apply app_prefix.
+    Qed.  
+
+    Lemma prefix_first_eq_last_eq : forall (p : list A) a b, Prefix (p ++ [a]) (p ++ [b]) -> a = b.
+      intros; induction p; inversion H; auto.
+    Qed.
+
+    Lemma prop_pref_lt_len: forall (l l' : list A), PropPrefix l l' -> length l < length l'.
+      intros.
+      destruct H; induction H.
+      - destruct lst; try contradiction; simpl.
+        exact (PeanoNat.Nat.lt_0_succ (length lst)).
+      - assert (lst0 <> lst1). {
+          intro Hbad; rewrite Hbad in H0.
+          auto.
+        }
+        exact (Arith_base.lt_n_S_stt (length lst0) (length lst1) (IHPrefix H1)).
+    Qed.
+
+    Lemma prefix_app_last :
+      forall (l1 l2 : list A) (x : A),
+        Prefix l1 (l2 ++ [x]) ->
+        l1 = (l2 ++ [x]) \/ Prefix l1 l2.
+    Proof.
+      intros ? ?.
+      generalize dependent l1.
+      induction l2; intros ? ? Hpref; inversion Hpref; auto.
+      - inversion H1; subst. auto.
+      - specialize (IHl2 lst0 x H1).
+        destruct IHl2; [subst lst0|]; auto.
+    Qed.
+
+    Theorem prop_prefix_app_implies_prefix :
+      forall (l1 l2 : list A) (x : A),
+        PropPrefix l1 (l2 ++ [x]) ->
+        Prefix l1 l2.
+    Proof.
+      intros ? ? ? Hppref.
+      unfold PropPrefix in Hppref.
+      destruct Hppref as [Hpref Hneq].
+      apply prefix_app_last in Hpref.
+      destruct Hpref; [contradiction | assumption].
+    Qed.
   End ListPrefix.
 End BaseTheories.
