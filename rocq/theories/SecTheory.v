@@ -8,8 +8,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
   Import B BT LD TD SP SD TT.
   Import LangNotations.
 
-  Ltac list_rev_ind xs := induction xs using rev_ind.
-
   Section SilentProperties.
     Lemma silent_split : forall l1 l2, erase (l1 ++ l2) = erase l1 ++ erase l2.
       intros.
@@ -31,32 +29,6 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       reflexivity.
     Qed.
 
-    Lemma silent_decomp : forall l1 l2 e, ~ sil e 
-      -> erase l1 = erase l2 
-      -> exists l' ls', erase (l1 ++ [e]) = erase (l2 ++ l') 
-          /\ l' = ls' ++ [e] 
-          /\ erase ls' = [].
-      induction l1, l2; intros.
-      - exists [e], [].
-        eauto.
-      - simpl in *.
-        destruct (sil_dec e); try discriminate.
-        + exists [e0], [].
-          rewrite silent_split, <-H0.
-          destruct (sil_dec e0); try contradiction.
-          rewrite nsil_sing; try assumption.
-          eauto.
-      - simpl in *.
-        destruct (sil_dec a); try discriminate.
-        + exists [e], [].
-          rewrite silent_split, nsil_sing; try assumption.
-          rewrite H0.
-          eauto.
-      - exists [e0], [].
-        rewrite silent_split, H0, silent_split.
-        eauto.
-    Qed.
-
     Lemma silent_break : forall l1 l2 e, 
       ~ sil e 
       -> erase l1 = erase (l2 ++ [e]) 
@@ -64,7 +36,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           l1a ++ (e :: ls) = l1 
           /\ erase l1a = erase l2 
           /\ erase ls = [].
-      list_rev_ind l1; list_rev_ind l2; intros.
+      induction l1 using rev_ind; induction l2 using rev_ind; intros.
       - rewrite silent_split, nsil_sing in H0; try assumption.
         discriminate.
       - rewrite <-app_assoc, silent_split, silent_split in H0.
@@ -77,7 +49,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         + rewrite sil_sing, app_nil_r in H0; try assumption.
           specialize (IHl1 [] e H H0) as [l1a [l1b [Hcompose [Hdeq1 Hdeq2]]]].
           exists l1a, (l1b ++ [x]).
-          split; [|split].
+          repeat split.
           * rewrite <-app_cons_middle in *.
             rewrite <-Hcompose.
             rewrite <- ?app_assoc.
@@ -95,17 +67,17 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           specialize (IHl1 (l2 ++ [x0]) e H H0) as [l1a [ls [Hcompose [Hdeq1 Hdeq2]]]].
           exists l1a, (ls ++ [x]).
           rewrite ?silent_split.
-          rewrite (sil_sing x), app_nil_r; try assumption.
+          rewrite (sil_sing x s), app_nil_r.
           rewrite <-Hcompose, <-app_assoc, app_comm_cons.
           rewrite silent_split in Hdeq1.
-          split; try split; try assumption.
+          repeat split; try assumption.
         + destruct (sil_dec x0).
           * rewrite ?silent_split in H0. 
             rewrite (sil_sing x0), (nsil_sing x), (nsil_sing e), app_nil_r in H0; try assumption.
             apply app_inj_tail in H0 as [Ha Hb]; subst.
             exists l1, [].
             rewrite silent_split, (sil_sing x0), app_nil_r; try assumption.
-            split; [|split]; eauto.
+            repeat split; eauto.
           * rewrite silent_split, silent_split in H0.
             rewrite (nsil_sing x), (nsil_sing e) in H0; try assumption.
             apply app_inj_tail in H0 as [Ha Hb]; subst.
@@ -125,6 +97,14 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
           * subst.
             assumption.
           * exact (IHp H0).
+    Qed.
+
+    Lemma erasure_app : forall p p' e, erase p = p' ++ [e] -> ~ sil e.
+      intros.
+      pose proof in_erase_impl_nsil e p.
+      pose proof in_elt e p' [].
+      rewrite <- H in H1.
+      exact (H0 H1).
     Qed.
 
     Lemma erase_idemp : forall p, erase (erase p) = erase p.
@@ -418,7 +398,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       apply find_first_kept in H0 as [p_sil [e [p_rest [Hcompose2 [Hpsil Hnsil]]]]].
       exists (p2' ++ p_sil), e.
       subst.
-      split; try split; try split; try assumption.
+      repeat split; try assumption.
       - pose proof (app_prefix (p2' ++ p_sil) (e :: p_rest)).
         rewrite <-app_assoc in H0.
         assumption.

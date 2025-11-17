@@ -18,19 +18,17 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
     -> deq_store m1 m2 <-> deq_store m1 m2 
           /\ (forall p1, (m1, p1) <=| (m1, s1) -> exists p2, (c, m2)==>*[p2] /\ deq_evt_lst p1 p2).
-      split; intros.
-      - split.
-        * assumption.
-        * unfold In, HPsniD in H.
-          destruct H0 as [Hcs1 Hcs2].
-          intros p1 Hp1s1.
-          pose proof (H (m1, s1) (m2, s2) Hcs1 Hcs2 H1) as PSNI'.
-          pose proof (PSNI' (m1, p1) Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
-          exists p2.
-          split.
-          + inversion Hpfx; subst.
-            trace_prefix_prod c m2 p2; assumption.
-          + assumption.
+      split; intros; [split|]; try assumption.
+      - unfold In, HPsniD in H.
+        destruct H0 as [Hcs1 Hcs2].
+        intros p1 Hp1s1.
+        pose proof (H _ _ Hcs1 Hcs2 H1) as PSNI'.
+        pose proof (PSNI' _ Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
+        exists p2.
+        split; [|assumption].
+        + inversion Hpfx; subst.
+          trace_prefix_prod c m2 p2.
+          assumption.
       - destruct H1.
         assumption.
     Qed.
@@ -55,14 +53,13 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       intros c HHPsniD p m a ? ?.
       pose proof (hpsni_memset_invariance c HHPsniD m) as Hinv.
       assert (Same_set Store (atk_knowledge c m p) (indistincts c m)). {
-        apply (prefix_prefix_prod p (p ++ [a]) (app_prefix p [a])) in H.
+        apply (prefix_prefix_prod _ _ (app_prefix p [a])) in H.
         get_max_trace c m p [st [Hpfx Htprod]].
         apply Hinv with st; assumption.
       }
       assert (Same_set Store (indistincts c m) (atk_knowledge c m (p ++ [a]))). {
         get_max_trace c m (p ++ [a]) [st [Hepfx Htprod]].
-        apply Same_set_sym.
-        apply Hinv with st; assumption.
+        apply Same_set_sym, Hinv with st; assumption.
       }
       apply Same_set_trans with (indistincts c m); assumption.
     Qed.
@@ -86,42 +83,30 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         destruct H1 as [p2 [Hp2Prod Hp2Deq]].
         rewrite silent_split; simpl.
         destruct (sil_dec x).
-          * exists p2.
-            split; [assumption|].
-            unfold deq_evt_lst in Hp2Deq.
-            rewrite app_nil_r.
-            assumption.
+          * rewrite app_nil_r.
+            can_step_auto. 
           * trace_prefix_prod c m1 (p1 ++ [x]).
             destruct (HKPsni p1 m1 x) as [H4 _]; try assumption.
             unfold Included, In, atk_knowledge in H4.
             pose proof H4 m2 as H4ak; clear H4.
-            destruct H4ak as [Htprod [p' [Hpprod Hpeq]]]. {
-              split; [| exists p2; split]; assumption. 
-            }
+            destruct H4ak as [Htprod [p' [Hpprod Hpeq]]]; can_step_auto.
             unfold deq_evt_lst in Hpeq.
-            rewrite silent_split in Hpeq. simpl in Hpeq.
-            destruct (sil_dec x); [contradiction |].
-            eauto.
+            rewrite silent_split, (nsil_sing x n) in Hpeq.
+            can_step_auto.
     Qed.  
 
     Theorem kpsni_det_impl_hpsni : forall c, In Cmd KPsniD c 
       -> (det_rel steps_to_combined)
       -> In Property HPsniD (behavior c).
-      unfold det_rel, steps_to_combined, KPsniD, In, HPsniD.
-      intros ? HKPsniD one_step_det [m1 st1] [m2 st2] ? ? ? p1 Hpsub.
+      intros ? HKPsniD one_step_det [m1 st1] [m2 st2] ? ? ? [mp1 p1] Hpsub.
       destruct (kpsni_indistinct_conseq c HKPsniD st1 m1 st2 m2) as [Hl _]; [eauto| ].
-      apply Hl in H1  as [Hindist Hprod].
-      destruct p1 as [mp1 p1].
+      specialize (Hl H1) as [Hindist Hprod].
       inversion Hpsub; subst.
-      apply (Hprod p1) in Hpsub.
-      destruct Hpsub as [p2 [Hp2prod Hp2deq]].
+      apply Hprod in Hpsub as [p2 [Hp2prod Hp2deq]].
       get_max_trace c m2 p2 [stp2 [Hp2pfx Ht2prod]].
+      pose proof det_trace_pfx_production one_step_det _ _ _ H0 p2.
       exists (m2, p2).
-      split.
-      - pose proof det_trace_pfx_production one_step_det c m2 st2 H0 p2.
-        apply H1.
-        assumption.
-      - auto.
+      split; auto.
     Qed.
   End Core.
 End PSNI.

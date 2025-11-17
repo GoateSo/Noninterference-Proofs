@@ -215,4 +215,23 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       apply H1; assumption.
     Qed.
   End DetTraces.
+  Ltac det_subst := repeat lazymatch goal with
+    | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
+    | [Det : (det_rel steps_to_combined), H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
+      => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+    | [Det : (det_rel steps_to_combined), H0 : ?cs -->[?a0] ?cs0, H1 : steps_to_combined ?cs ?a1 ?cs1 |- _]
+      => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+  end.
+
+  Ltac det_pfx_prod c m p name := lazymatch goal with
+    | [Det : (det_rel steps_to_combined), Hbehav : c ~~> (m, ?st), Htpref : (m, p) <=| (m, ?st) |- _] => 
+      pose proof det_trace_pfx_production c m st Hbehav p Htpref as name
+  end. 
+
+  Ltac det_pref_from_len name := lazymatch goal with
+    | [Det : det_rel steps_to_combined, Hp1 : (?c,?m)==>*[?p1], Hp2 : (?c,?m)==>*[?p2], Hlen : (length ?p1 <= ?length ?p2) |- _] => pose proof det_prod_impl_prefix Det p1 p2 c m Hlen Hp1 Hp2 as name
+  end.
+  
+  Tactic Notation "det_pfx_prod" constr(c) constr(m) constr(p) ident(name) := det_pfx_prod c m p name.
+  Tactic Notation "det_pfx_prod" constr(c) constr(m) constr(p) := let H := fresh in det_pfx_prod c m p H.
 End DetTheories.

@@ -6,6 +6,15 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Import B LD TD.
   Import LangNotations.
 
+  Ltac can_step_auto := simpl; lazymatch goal with
+    | [H: ?cs1==>*[?p]?cs2  |- ?cs1==>*[?p]] => exists cs2; eauto
+    | [H: ?cs1==>*[?p]?cs2  |- exists ps, ?cs1==>*[ps]] => exists p; exists cs2; eauto
+    | [H: ?cs1==>*[?p]?cs2  |- exists ps, ?cs1==>*[ps] /\ _] => exists p; exists cs2; eauto
+    | [ |- ?cs1==>*[[]]] => exists cs1; eauto
+    | [ |- ?cs1==>*[[]] /\ _] => exists cs1; eauto
+    | _ => eauto
+  end.
+
   Lemma trace_dec_thm : forall t, t = t_dcom t.
     intros; case t; simpl; auto.
   Qed.
@@ -23,6 +32,17 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
       assumption. 
   Qed.
 
+  Lemma multistep_tail : forall e p c m, (c, m) ==>*[p ++ [e]] -> exists cs' cs'', (c, m) ==>*[p] cs' /\ cs' -->[e] cs''.
+    induction p; intros; simpl in H; destruct H.
+    - inversion H; inversion H5; subst.
+      can_step_auto.
+    - inversion H; subst.
+      destruct cs1 as (c1, m1).
+      destruct (IHp c1 m1); can_step_auto.
+      + destruct H0 as [[c2 m2] [HprodStart HprodEnd]].
+        can_step_auto.
+  Qed.
+
   (* all configurations produce a trace *)
   Theorem univ_production : forall c m, exists st, c ~~> (m, st).
     intros.
@@ -35,8 +55,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     intros.
     unfold has_step.
     apply exists_to_inhabited_sig.
-    exists (e, c', s'); simpl.
-    assumption.
+    exists (e, c', s'); eauto.
   Qed.
 
   Lemma lst_prefix_stream_prefix : forall lst0 lst1, Prefix lst0 lst1 -> forall st, EvtPrefix lst1 st -> EvtPrefix lst0 st.
@@ -96,15 +115,13 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     exists (prepend p (getTrace c' s')).
     split.
     - constructor.
-      apply prefix_of_prepend.
-      apply prefix_preorder_inst.
+      apply prefix_of_prepend, prefix_preorder_inst.
     - generalize dependent m.
       revert c.
       unfold "~~>", behavior; simpl.
-      induction p; intros.
-      + inversion Hprod; subst.
-        assumption.
-      + inversion Hprod; destruct cs1; subst.
+      induction p; intros; inversion Hprod.
+      + eauto.
+      + destruct cs1; subst.
         apply (Produces_step _ _ _ c0 s); try assumption.
         apply IHp in H5.
         assumption.
@@ -114,26 +131,22 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         -> EvtPrefix lst st
         -> (c, s) ==>*[lst].
     induction lst ; intros c s st cs Prod ; eauto using EvtPrefix_empty.
-    - exists (c,s). auto.
+    - can_step_auto.
     - inversion Prod; subst. inversion cs; subst.
       apply IHlst in H5 as [cs2 Hprod]; try assumption.
-      exists cs2.
-      apply (MultiStep_some (c, s) (c', s') cs2); assumption.
+      pose proof MultiStep_some _ _ _ _ _ H4 Hprod.
+      can_step_auto.
   Qed.
 
   Lemma prefix_prefix_prod : forall p' p, Prefix p' p -> forall c m,  (c, m) ==>*[p] -> (c, m) ==>*[p'].
       unfold iter_trace_prod.
       intros ? ? HPref.
-      dependent induction HPref; intros.
-      - eauto.
+      dependent induction HPref; intros; [eauto | ].
       - destruct H.
         inversion H; subst.
         destruct cs1 as [c' m'].
         pose proof IHHPref c' m'.
-        destruct H0.
-        + exists x; apply H5.
-        + exists x0.
-          apply (MultiStep_some (c, m) (c', m') x0); assumption. 
+        destruct H0; can_step_auto.
   Qed.
 
   Lemma PropPrefix_production : forall p' p, PropPrefix p' p -> forall c m, (c,m)==>*[p] -> exists e, Prefix (p' ++ [e]) p /\ (c,m)==>*[p' ++ [e]].
@@ -144,9 +157,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         + exfalso; apply Hneq; reflexivity.
         + destruct H. inversion H; subst.
           exists e.
-          split; simpl; auto.
-          exists cs1.
-          exact (MultiStep_some (c, m) cs1 cs1 e [] H4 (MultiStep_refl cs1)).
+          split; can_step_auto.
       - destruct H.
         inversion H; subst.
         destruct cs1 as (c', m').
@@ -160,12 +171,10 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
         destruct IHHPref. { exists x; assumption. }
         destruct H1 as [Hpref [(c'', m'') Hcompose]].
         exists x0.
-        split.
+        split; [| can_step_auto].
         + rewrite <-app_comm_cons.
           constructor.
           assumption.
-        + exists (c'', m''); simpl.
-          apply MultiStep_some with (cs1:=(c',m')); assumption.
   Qed.  
          
   Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
@@ -183,7 +192,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
 
   Ltac get_max_trace c m p pat := lazymatch goal with
     | [Hpprod : (c,m)==>*[p] |- _] => let H := fresh in
-      destruct (trace_max c m p Hpprod) as pat
+      destruct (trace_max _ _ _ Hpprod) as pat
   end.
 
   Tactic Notation "get_max_trace" constr(c) constr(m) constr(p) simple_intropattern(pat) := get_max_trace c m p pat.
