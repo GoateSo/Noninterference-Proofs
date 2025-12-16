@@ -1,7 +1,6 @@
 Require Import Basic Lang.
 Module Type DeterminismDef (LD : LangDefs).
-    Import LD.
-    Import LangNotations.
+    Import LD LangNotations.
     Section Determinism.
         Definition det_rel {A B C: Type} (step_rel: A -> B -> C -> Prop) :=
             forall cs cs1 cs2 a1 a2,

@@ -4,10 +4,6 @@ Require Import SecPol.
 From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
 Import ListNotations.
 
-Class DecideIn {A : Type} (S : Ensemble A) := {
-  dec_in : forall a, {In A S a} + {~ In A S a}
-}.   
-
 Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD).
   Import B LD TD SP.
   Import LangNotations.

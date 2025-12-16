@@ -1,21 +1,11 @@
 From Coq Require Import Basics Equality List.
 Import ListNotations.
 
-Class EqDec (A : Type) := {
-  eq_dec : forall (a b : A), {a = b} + {a <> b}
-}.
-  
 (* The typeclass abstracting over a language's small-step semantics. *)
 Class LanguageSemantics := {
   Cmd : Type;
   Store : Type;
   Event : Type; 
-
-  (* decideability of command/store/event equality *)
-  (* TODO: thin these out when not needed *)
-  cmd_eq_dec : EqDec Cmd; 
-  mem_eq_dev : EqDec Store;
-  evt_eq_dec : EqDec Event;
   
   (* progess : <c,s> --a-> <c', s'> *)
   steps_to : Cmd -> Store -> Event -> Cmd -> Store -> Prop;
