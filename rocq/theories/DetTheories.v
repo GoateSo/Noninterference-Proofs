@@ -59,7 +59,6 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       unfold "~~>", behavior; simpl.
       cofix CH. 
       intros.
-      unfold det_rel, steps_to_combined in Det.
       inversion H; inversion H0; subst.
       - destruct (Det (c, m) (c', s') (c'0, s'0) a a0); try assumption.
         + constructor.
@@ -67,8 +66,6 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
           * rewrite pair_equal_spec in H3; destruct H3; subst;
             apply (CH c'0 s'0 st st0); assumption.
       - apply produce_impl_canstep in H1.
-        unfold no_step in H6.
-        unfold has_step in H1.
         contradiction.
       - apply produce_impl_canstep in H5.
         contradiction.
@@ -141,12 +138,9 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       (c, m) ==>*[p] cs1 
       -> (c, m) ==>*[p] cs2
       -> cs1 = cs2.
-      induction p; intros; inversion H; inversion H0; subst.
+      induction p; intros; inversion H; inversion H0; subst_eq_steps.
       - reflexivity.
-      - unfold det_rel, steps_to_combined in Det.
-        specialize (Det (c,m) _ _ _ _ H5 H11) as [Hceq _].
-        subst.
-        destruct cs6.
+      - destruct cs3.
         specialize (IHp _ _ _ _ H6 H12).
         assumption.
     Qed.
@@ -158,14 +152,10 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       -> Prefix p1 p2.
       induction p1, p2; auto; intros.
       - apply PeanoNat.Nat.nle_succ_0 in H.
-        exfalso.
-        apply H.
+        contradiction.
       - destruct H0, H1.
         inversion H0. inversion H1.
-        subst.
-        unfold det_rel, steps_to_combined in Det.
-        specialize (Det _ _ _ _ _ H6 H12) as [HeqConf HdeqE].
-        rewrite HdeqE.
+        subst_eq_steps.
         apply Prefix_some.
         apply le_S_n in H.
         destruct cs1 as [c' m']; subst.
