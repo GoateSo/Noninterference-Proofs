@@ -101,15 +101,13 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
 
     Lemma erasure_app : forall p p' e, erase p = p' ++ [e] -> ~ sil e.
       intros.
-      pose proof in_erase_impl_nsil e p.
       pose proof in_elt e p' [].
-      rewrite <- H in H1.
-      exact (H0 H1).
+      rewrite <- H in H0.
+      exact (in_erase_impl_nsil _ _ H0).
     Qed.
 
     Lemma erase_idemp : forall p, erase (erase p) = erase p.
-      induction p.
-      - auto.
+      induction p; [reflexivity|].
       - destruct (sil_dec a) eqn:Heq; simpl; rewrite Heq.
         + apply IHp.
         + simpl; rewrite Heq.
@@ -127,18 +125,14 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       rewrite <-H in H0.
       apply in_erase_impl_nsil in H0.
       assert (erase (l2 ++ [e]) = l2 ++ [e]). {
-        assert (erase (erase l1) = erase (l2 ++ [e])). {
-          exact (f_equal erase H).
-        }
+        assert (erase (erase l1) = erase (l2 ++ [e])) by exact (f_equal erase H).
         rewrite erase_idemp in H1.
-        rewrite <-H1, <-H.
-        reflexivity.
+        congruence.
       }
       assert (erase l2 = l2). {
-        rewrite silent_split, nsil_sing in H1; try assumption.
-        apply app_inj_tail in H1.
-        destruct H1.
-        auto.
+        rewrite silent_split, (nsil_sing e H0) in H1.
+        apply app_inj_tail in H1 as [? _].
+        assumption.
       }
       rewrite <-H1 in H.
       rewrite <-H2.
@@ -150,18 +144,17 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
       - rewrite silent_split, sil_sing, app_nil_r; try assumption.
         pose proof (app_prefix (erase p) [a]).
         pose proof @prefix_preorder_inst Event as [_ Htrans].
-        specialize (Htrans (erase p) (erase p ++ [a]) p2).
-        apply Htrans; assumption.
+        apply (Htrans _ (erase p ++ [a]) _); assumption.
       - rewrite silent_split, nsil_sing; try assumption.
     Qed.
 
     Lemma silent_indistinct : forall c m a p, sil a -> Same_set Store (atk_knowledge c m p) (atk_knowledge c m (p ++ [a])).
       intros.
-      split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst.
-      - rewrite silent_split; simpl.
-        destruct (sil_dec a); rewrite Hdeq; [auto using app_nil_r | contradiction].
-      - rewrite <-Hdeq; simpl; rewrite silent_split; simpl.
-        destruct (sil_dec a); [auto using app_nil_r | contradiction].
+      split; split; destruct H0; try assumption; destruct H1 as [p' [Hprod Hdeq]]; exists p'; split; try assumption; unfold deq_evt_lst in *.
+      - rewrite silent_split, (sil_sing a H), app_nil_r. 
+        assumption.
+      - rewrite <-Hdeq. rewrite silent_split, (sil_sing a H), app_nil_r.
+        reflexivity.
     Qed.
   End SilentProperties.
 
@@ -251,7 +244,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         + inversion H.
           * eauto.
           * subst.
-            specialize (IHl2 lst0 H2) as [l2'' [? ?]].
+            specialize (IHl2 _ H2) as [l2'' [? ?]].
             exists (e :: l2''); simpl.
             split.
             -- constructor.
@@ -406,7 +399,7 @@ Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD
         intro Hbad.
         apply app_inv_head in Hbad.
         inversion Hbad.
-      - rewrite <-app_assoc, <-app_cons_middle with (ys:=p_rest).
+      - rewrite <-app_assoc, <-app_cons_middle with (l2:=p_rest).
         pose proof (app_prefix (p2' ++ p_sil ++ [e]) (p_rest)).
         rewrite <-app_assoc in H0. rewrite <-app_assoc in H0.
         assumption.

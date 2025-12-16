@@ -15,21 +15,18 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
 
     (* ------------------ KPSNI <=== HPSNI  ------------------ *)
     Lemma hpsni_indistinct_conseq : forall c, In Property HPsniD (behavior c)
-    -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
+    -> forall s1 m1 s2 m2, c ~~> (m1, s1) -> c ~~> (m2, s2)
     -> deq_store m1 m2 <-> deq_store m1 m2 
           /\ (forall p1, (m1, p1) <=| (m1, s1) -> exists p2, (c, m2)==>*[p2] /\ deq_evt_lst p1 p2).
       split; intros; [split|]; try assumption.
-      - unfold In, HPsniD in H.
-        destruct H0 as [Hcs1 Hcs2].
-        intros p1 Hp1s1.
-        pose proof (H _ _ Hcs1 Hcs2 H1) as PSNI'.
-        pose proof (PSNI' _ Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
+      - intros p1 Hp1s1.
+        specialize (H _ _ H0 H1 H2 _ Hp1s1) as [[m p2] [Hpfx [Hlst Hstore]]].
         exists p2.
         split; [|assumption].
         + inversion Hpfx; subst.
           trace_prefix_prod c m2 p2.
           assumption.
-      - destruct H1.
+      - destruct H2.
         assumption.
     Qed.
 
@@ -38,14 +35,10 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     -> forall m st, c ~~> (m, st)
     -> forall p', (m, p') <=| (m, st) -> Same_set Store (atk_knowledge c m p') (indistincts c m).
       split; intros m' Hin.
-      - destruct Hin as [Hdeq _]; assumption.
+      - destruct Hin; assumption.
       - pose proof univ_production c m' as [st' Hprod].
         pose proof hpsni_indistinct_conseq c H st m st' m'.
-        destruct H2; [split; assumption |].
-        unfold In, indistincts in Hin.
-        apply (hpsni_indistinct_conseq c H st m st') in Hin. 
-          + destruct Hin. split; auto.
-          + split; assumption.
+        apply H2 in Hin as [? ?]; try split; auto.
     Qed.
 
     Theorem Hpsni_impl_KPsni : forall c, In Property HPsniD (behavior c) -> In Cmd KPsniD c.
@@ -66,10 +59,10 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     
     (* ------------------ KPSNI + DET ==> HPSNI  ------------------ *)    
     Lemma kpsni_indistinct_conseq : forall c, In Cmd KPsniD c
-    -> forall s1 m1 s2 m2, c ~~> (m1, s1) /\ c ~~> (m2, s2)
+    -> forall s1 m1 s2 m2, c ~~> (m1, s1) -> c ~~> (m2, s2)
     -> deq_store m1 m2 <-> deq_store m1 m2 
           /\ (forall p1, (m1, p1) <=| (m1, s1) -> exists p2, (c, m2)==>*[p2] /\ deq_evt_lst p1 p2).
-      intros c HKPsni s1 m1 s2 m2 [Hdp1 Hdp2].
+      intros ? HKPsni ? ? ? ? Hdp1 Hdp2.
       split; intros; [| destruct H; assumption].
       split; [assumption |].
       induction p1 using rev_ind; intros.
@@ -99,7 +92,7 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       -> (det_rel steps_to_combined)
       -> In Property HPsniD (behavior c).
       intros ? HKPsniD one_step_det [m1 st1] [m2 st2] ? ? ? [mp1 p1] Hpsub.
-      destruct (kpsni_indistinct_conseq c HKPsniD st1 m1 st2 m2) as [Hl _]; [eauto| ].
+      destruct (kpsni_indistinct_conseq c HKPsniD st1 m1 st2 m2) as [Hl _]; eauto.
       specialize (Hl H1) as [Hindist Hprod].
       inversion Hpsub; subst.
       apply Hprod in Hpsub as [p2 [Hp2prod Hp2deq]].

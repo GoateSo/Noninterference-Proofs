@@ -43,10 +43,10 @@ Module Type LFP (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDef
       }
       inversion Hres1; subst.
       apply dlt_pfx_alt in Hres2 as [a' [Hnsila' Hdeqpa']]; [|apply deq_store_equiv].
-      pose proof dle_evt_lst_alt (p'++[a']) p2 Hdeqpa' as [p'' [Hppref Hppdeq]].
+      pose proof dle_evt_lst_alt _ _ Hdeqpa' as [p'' [Hppref Hppdeq]].
       trace_prefix_prod c m' p2 Hp2prod.
       apply prefix_prefix_prod with (p':=p'')in Hp2prod; try assumption.
-      exists p'',a'.
+      exists p'', a'.
       repeat split; try assumption.
       unfold deq_evt_lst in *.
       rewrite silent_split in *.

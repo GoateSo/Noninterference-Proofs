@@ -23,16 +23,13 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       get_max_trace c m' p' [st' [Hpfx' Htprod']].
       inversion Hpfx; inversion Hpfx'; subst.
       specialize (HPini _ _ Htprod Htprod' Hmdeq _ _ Hpfx Hpfx').
-      assert (e = e'). {
-        destruct HPini as [Htdle | Htdle]; inversion Htdle as [Hpdle _]; subst; unfold deq_evt_lst, dle_evt_lst in *; simpl in *; rewrite Hdeq' in Hpdle; rewrite ?silent_split in Hpdle; rewrite ?nsil_sing in Hpdle; try assumption.
-        - apply (prefix_first_eq_last_eq (erase p)).
-          assumption.
-        - symmetry.
-          apply (prefix_first_eq_last_eq (erase p) e' e).
-          assumption.
-      }
-      exists p'.
-      split; [assumption | congruence].
+      replace e' with e in *.
+      - exists p'.
+        split; [assumption | congruence].
+      - unfold dle_pfx, dle_evt_lst, deq_evt_lst in HPini.
+        simpl in HPini.
+        rewrite Hdeq', ?silent_split, ?nsil_sing in HPini; try assumption.
+        destruct HPini as [[Hpdle _] | [Hpdle _]]; [|symmetry]; exact (prefix_first_eq_last_eq _ _ _ Hpdle).
     Qed.
 
     Theorem Hpini_impl_KPini : forall c, In Property HPiniD (behavior c) -> In Cmd KPiniD c.
@@ -53,13 +50,10 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       -> length p1 <= length p2.
       induction p1, p2; simpl; auto; intros; [apply le_0_n | |].
       - destruct H0.
-        destruct (sil_dec a).
-        + inversion H0; subst.
-          symmetry in H5.
-          contradiction.
-        + inversion H0.
+        destruct (sil_dec a); inversion H0.
+        symmetry in H5.
+        contradiction.
       - apply le_n_S.
-        simpl in *.
         destruct H1, H2.
         inversion H1. inversion H2.
         destruct cs1 as [c' m'].
@@ -69,7 +63,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         + destruct (IHp1 H0); can_step_auto.
         + assert (PropPrefix (erase p1) (erase p2)). {
             destruct H0.
-            inversion H0; subst.
+            inversion H0.
             split; [assumption | ].
             - intro Hbad.
               rewrite Hbad in H3.
@@ -78,6 +72,13 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           destruct (IHp1 H3); can_step_auto.
     Qed.
 
+    (* 
+      niche lemma that leverages Det theories with SecTheory concepts, so placing
+      here at only point of use 
+     
+      because of determinism, any difference in the erased trace must be due to
+      a difference in length instead of a different event at the same time
+    *)
     Lemma det_dlt_same_config_impl_propprefix : forall p1 p2 c m ,
       det_rel steps_to_combined
       -> PropPrefix (erase p1) (erase p2)
@@ -85,15 +86,16 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       -> (c, m) ==>*[p2]
       -> PropPrefix p1 p2.
       intros.
-      pose proof det_dlt_same_config_impl_shorter as Hshort.
-      specialize (Hshort p1 p2 c m H H0 H1 H2).
+      assert (length p1 <= length p2) by eauto using det_dlt_same_config_impl_shorter.
       det_pref_from_len Hspref.
       split; [assumption|].
-      intro Hbad.
       destruct H0.
       congruence.
     Qed. 
 
+    (* useful consequence, if KPini holds, then for 2 indistinguishable inputs, 
+    if they produce two prefixes indistinguishable from each other, and both are 
+    followed by another low-visible event, then that low visible event must be the same. *)
     Lemma kpini_conseq : forall c m1 m2 p1 p2 e1 e2, 
     In Cmd KPiniD c 
     -> (det_rel steps_to_combined)
@@ -105,44 +107,49 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
     -> (c,m2)==>*[p2++[e2]]
     -> (exists p e', ~ sil e' /\ (c, m1) ==>*[p] /\  deq_evt_lst p (p2 ++ [e']))
     -> deq_evt_lst (p1++[e1]) (p2++[e2]).
-      intros ? ? ? ? ? ? ? HKpini one_step_det Hmdeq Hpdeq Hnsil1 Hnsil2 Hprod1 Hprod2 [p [e' [Hnsile' [Hnpprod Hdeq]]]].
+      (* intros and unpacking *)
+      intros * HKpini one_step_det Hmdeq Hpdeq Hnsil1 Hnsil2 Hprod1 Hprod2 [p [e' [Hnsile' [Hnpprod Hdeq]]]].
       destruct (HKpini p2 m2 e2) as [HKpinil _]; try assumption.
       specialize (HKpinil m1).
-      unfold Included, In in HKpinil.
       apply multistep_tail in Hprod1 as [cs1' [cs1'' [Hp1Start Hp1End]]].
       apply multistep_tail in Hprod2 as [cs2' [cs2'' [Hp2Start Hp2End]]].
       destruct HKpinil as [_ [p' [Hpprod Hdeqpp]]]. {
+        (* showing prog knowledge *)
         split; [| can_step_auto].
         + apply deq_store_equiv in Hmdeq.
           assumption.
       }
       unfold deq_evt_lst in *.
-      apply symmetry in Hdeqpp.
+      symmetry in Hdeqpp.
+      (* p1 <=d p2 + e2, since p1 =d p2 *)
       assert (PropPrefix (erase p1) (erase (p2 ++ [e2]))) as Hppref. {
+        rewrite Hpdeq, silent_split, nsil_sing in *; try assumption.
         split.
-        - rewrite Hpdeq, silent_split, nsil_sing; try assumption.
-          apply app_prefix.
-        - intro Hbad.
-          rewrite Hpdeq, silent_split, nsil_sing in Hbad; try assumption.
-          pose proof list_app_neq_list (erase p2) e2.
-          contradiction. 
+        - apply app_prefix.
+        - apply list_app_neq_list.
       }
       rewrite <-Hdeqpp in Hppref.
       pose proof det_dlt_same_config_impl_propprefix as Hdet_ppref.
       specialize (Hdet_ppref p1 p' c m1 one_step_det Hppref).
       destruct (Hdet_ppref); clear Hdet_ppref; can_step_auto.
-      - assert (PropPrefix p1 p') by (split; assumption). 
-        apply (PropPrefix_production p1 p' H1) in Hpprod as [evt [Hnpref Hnprod]].
-        apply multistep_tail in Hnprod as [cs3' [cs3'' [Hp3Start Hp3End]]].
-        assert (cs1' = cs3') by (apply (det_prod_impl_same one_step_det p1 c m1); assumption).
-        subst; det_subst.
-        apply pref_impl_dle in Hnpref.
-        rewrite Hdeqpp, ?silent_split, ?nsil_sing, Hpdeq in Hnpref; try assumption.
-        apply prefix_first_eq_last_eq in Hnpref.
-        rewrite ?silent_split, Hpdeq, Hnpref.
-        reflexivity.
+      assert (PropPrefix p1 p') by (split; assumption). 
+      apply (PropPrefix_production _ _ H1) in Hpprod as [evt [Hnpref Hnprod]].
+      apply multistep_tail in Hnprod as [cs3' [cs3'' [Hp3Start Hp3End]]].
+      assert (cs1' = cs3') by (apply (det_prod_impl_same one_step_det p1 c m1); assumption).
+      subst; det_subst.
+      apply pref_impl_dle in Hnpref.
+      rewrite Hdeqpp, ?silent_split, ?nsil_sing, Hpdeq in *; try assumption.
+      apply prefix_first_eq_last_eq in Hnpref.
+      subst.
+      reflexivity.
     Qed.
 
+    (* 
+      lemma 4.2: given that KPini holds, for indistingushiable inputs, if each
+      produces a prefix such that one is shorter than the other, then if 
+      determinism also holds, the shorter erased event list is a prefix of the 
+      longer one.
+     *)
     Lemma len_erase_conseq : forall c m1 m2,
       (det_rel steps_to_combined)
     -> In Cmd KPiniD c
@@ -158,7 +165,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       rewrite last_length in Hlen.
       apply S_le_impl_lt in Hlen.
       assert (length px1 <= length px2) as Hlen_weak by lia.
-      specialize (IHpx1 _ Hlen_weak); clear Hlen_weak.
+      specialize (IHpx1 _ Hlen_weak).
       symmetry in H3.
       assert (~ sil x) by exact (erasure_app _ _ _ H3).
       apply silent_break_2 in H3 as [p1p [p1s [Hcompose [Hdeq1 Hdeqsil]]]].
@@ -167,7 +174,7 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
       rewrite <-app_cons_middle, app_assoc in Hcompose.
       assert ((c, m1) ==>*[p1p ++ [x]]). {
         assert (Prefix (p1p ++ [x]) p1). {
-          rewrite <-Hcompose.
+          subst.
           apply app_prefix.
         }
         exact (prefix_prefix_prod _ _ H3 _ _ H5).
@@ -211,15 +218,12 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
           apply app_inj_tail in Hpdeq as [Heqa Heqb].
           subst.
           destruct (Compare.le_dec (length p) (length p2)).
-          * det_pref_from_len Hcommon.
-            apply pref_impl_dle in Hcommon.
-            congruence.
-          * det_pref_from_len Hp2prefp.
-            apply pref_impl_dle in Hp2prefp.
-            rewrite Hsplit in Hp2prefp.
-            pose proof Hp2prefp.
-            apply pref_le_len in Hp2prefp.
-            pose proof Nat.le_antisymm _ _ Hp2prefp H2.
+          all: det_pref_from_len Hpref; apply pref_impl_dle in Hpref.
+          * congruence.
+          * rewrite Hsplit in Hpref.
+            pose proof Hpref.
+            apply pref_le_len in Hpref.
+            pose proof Nat.le_antisymm _ _ Hpref H2.
             pose proof prefix_eq_len _ _ H10 H11.
             congruence.
     Qed.

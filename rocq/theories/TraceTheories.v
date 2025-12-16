@@ -16,7 +16,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   end.
 
   Lemma trace_dec_thm : forall t, t = t_dcom t.
-    intros; case t; simpl; auto.
+    intros; case t; auto.
   Qed.
 
   Lemma get_trace_prod : forall c m, Produces c m (getTrace c m).
@@ -25,7 +25,6 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
     rewrite (trace_dec_thm (getTrace c m)); simpl.
     destruct (can_step_dec c m) as [p_dec | p_no] eqn:Heq.
     - destruct p_dec as [[[e c'] s'] Hstep].
-      simpl in *.
       apply (Produces_step c m e c' s'); [assumption | ].
       apply CH.
     - apply No_production.
@@ -47,7 +46,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
   Theorem univ_production : forall c m, exists st, c ~~> (m, st).
     intros.
     exists (getTrace c m).
-    unfold "~~>", behavior; simpl.
+    unfold "~~>", behavior.
     apply get_trace_prod.
   Qed.
 
@@ -118,7 +117,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
       apply prefix_of_prepend, prefix_preorder_inst.
     - generalize dependent m.
       revert c.
-      unfold "~~>", behavior; simpl.
+      unfold "~~>", behavior.
       induction p; intros; inversion Hprod.
       + eauto.
       + destruct cs1; subst.
@@ -179,7 +178,7 @@ Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).
          
   Theorem trace_pfx_production_fwd : forall c m st, c ~~> (m, st) -> (forall p, (m, p) <=| (m, st) -> (c, m) ==>*[p]).
     intros.
-    unfold "~~>", behavior in H; simpl in H.
+    unfold "~~>", behavior in H.
     inversion H0; subst.
     apply prefix_prod_mstep with st; assumption.
   Qed.

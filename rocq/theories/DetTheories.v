@@ -124,7 +124,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
         simpl.
         rewrite app_nil_r.
         assumption.
-      - rewrite (PeanoNat.Nat.lt_eq_cases (length p1) (length (p2 ++ [x]))) in H .
+      - rewrite PeanoNat.Nat.lt_eq_cases in H .
         destruct H.
         + rewrite last_length in H.
           apply Arith_base.lt_n_Sm_le_stt in H.
@@ -144,10 +144,10 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       induction p; intros; inversion H; inversion H0; subst.
       - reflexivity.
       - unfold det_rel, steps_to_combined in Det.
-        specialize (Det (c,m) cs3 cs6 a a H5 H11) as [Hceq _].
+        specialize (Det (c,m) _ _ _ _ H5 H11) as [Hceq _].
         subst.
         destruct cs6.
-        specialize (IHp c0 s cs1 cs2 H6 H12).
+        specialize (IHp _ _ _ _ H6 H12).
         assumption.
     Qed.
 
@@ -157,28 +157,20 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       -> (c, m) ==>*[p2]
       -> Prefix p1 p2.
       induction p1, p2; auto; intros.
-      - simpl in H.
-        apply PeanoNat.Nat.nle_succ_0 in H.
+      - apply PeanoNat.Nat.nle_succ_0 in H.
         exfalso.
         apply H.
       - destruct H0, H1.
         inversion H0. inversion H1.
         subst.
         unfold det_rel, steps_to_combined in Det.
-        pose proof (Det (c, m) cs1 cs4 a e) as one_step_det.
-        specialize (one_step_det H6 H12) as [HeqConf HdeqE].
+        specialize (Det _ _ _ _ _ H6 H12) as [HeqConf HdeqE].
         rewrite HdeqE.
         apply Prefix_some.
-        simpl in H.
         apply le_S_n in H.
         destruct cs1 as [c' m']; subst.
         specialize (IHp1 p2 c' m' H).
-        destruct IHp1.
-        + exists x. assumption.
-        + exists x0. assumption.
-        + auto.
-        + apply Prefix_some.
-          assumption.
+        destruct IHp1; can_step_auto.
     Qed.
 
     Lemma prod_mstep_prefix : forall lst c s st cs, Produces c s st
@@ -195,7 +187,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
         -> forall c s c' s' lst', (c, s) ==>*[lst'] (c', s') /\ no_step c' s'
         -> Produces c s st
         -> Prefix lst lst'.
-        intros lst st EvtPfx. induction EvtPfx ; intros c s c' s' lst' Conv Prod ; auto.
+        intros ? ? EvtPfx. induction EvtPfx; intros c s c' s' lst' Conv Prod ; auto.
         inversion Prod; subst; destruct Conv as [Conv Hend]; inversion Conv; subst.
         - handle_prog_contradict.
         - subst_eq_steps.
@@ -204,9 +196,6 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
 
     Lemma det_trace_pfx_production : forall c m st, 
       c ~~> (m, st) -> (forall p, (c, m) ==>*[p] -> (m, p) <=| (m, st)).
-      intros ? ? ? ?.
-      pose proof Det (c,m) as one_step_det.
-      unfold steps_to_combined, det_rel in one_step_det.
       intros.
       destruct H0.
       pose proof prod_mstep_prefix p c m st x.
@@ -215,6 +204,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       apply H1; assumption.
     Qed.
   End DetTraces.
+
   Ltac det_subst := repeat lazymatch goal with
     | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
     | [Det : (det_rel steps_to_combined), H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]

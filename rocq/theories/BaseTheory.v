@@ -104,57 +104,51 @@ Module Type BaseTheories (B : Basic).
     Notation Prefix := (Prefix (A := A)).
 
     Lemma prop_prefix_exists_next :
-      forall (p1 p2 : list A),
-        PropPrefix p1 p2 ->
-        exists a, Prefix (p1 ++ [a]) p2 /\ List.In a p2.
+      forall (l1 l2 : list A),
+        PropPrefix l1 l2 ->
+        exists a, Prefix (l1 ++ [a]) l2 /\ List.In a l2.
     Proof.
-      intros p1 p2 H_prop.
+      intros ? ? H_prop.
       unfold PropPrefix in H_prop.
       destruct H_prop as [H_prefix H_neq].
       revert H_neq.
       induction H_prefix.
       - intros H_neq.
         simpl.
-        destruct lst as [| y lst'].
+        destruct lst.
         * exfalso. apply H_neq. reflexivity.
-        * exists y. constructor; constructor.
-          eauto.
-          reflexivity.
+        * exists a. 
+          split; constructor; [apply Prefix_empty | reflexivity].
       - intros H_neq.
-        assert (H_neq_lists : lst0 <> lst1).
+        assert (Hneq : lst0 <> lst1).
         {
-          intro H_eq_lists. 
+          intro Hbad. 
           subst lst1. 
           apply H_neq. reflexivity.
         }
-        specialize (IHH_prefix H_neq_lists).
-        destruct IHH_prefix as [a' H_prefix_a].
-        exists a'; destruct H_prefix_a; split.
-        + simpl; constructor; assumption.
+        specialize (IHH_prefix Hneq).
+        destruct IHH_prefix as [a' [Hpref Hin]].
+        exists a'; split.
+        + constructor; assumption.
         + apply in_cons; assumption.
     Qed.
 
-    Lemma app_not_nil : forall (xs : list A) x, [] <> xs ++ [x].
-      destruct xs; intros x Hbad; inversion Hbad.
+    Lemma app_not_nil : forall (l : list A) a, [] <> l ++ [a].
+      destruct l; intros ? Hbad; inversion Hbad.
     Qed.
 
-    Lemma app_cons_middle : forall (xs ys : list A) (x : A),
-        xs ++ [x] ++ ys = xs ++ (x :: ys).
+    Lemma app_cons_middle : forall (l1 l2 : list A) (a : A),
+        l1 ++ [a] ++ l2 = l1 ++ (a :: l2).
     Proof.
-      intros.
-      induction xs; simpl.
-      - reflexivity.
-      - rewrite <-IHxs.
-        reflexivity.
+      intros; induction l1; simpl; [|rewrite <-IHl1]; reflexivity.
     Qed.
 
-    Lemma app_prefix : forall (p p2 : list A), Prefix p (p ++ p2).
-      intros; induction p; [apply Prefix_empty | apply Prefix_some, IHp].
+    Lemma app_prefix : forall (l1 l2 : list A), Prefix l1 (l1 ++ l2).
+      intros; induction l1; [apply Prefix_empty | apply Prefix_some, IHl1].
     Qed.
 
     Lemma prefix_app : forall (ys xs zs: list A), Prefix ys xs -> Prefix ys (xs ++ zs).
       pose proof @prefix_preorder_inst A as [_ Htrans].
-      unfold Transitive in Htrans.
       intros.
       specialize (Htrans ys xs (xs ++ zs)).
       apply Htrans.
@@ -162,13 +156,10 @@ Module Type BaseTheories (B : Basic).
       - exact (app_prefix xs zs).
     Qed. 
     
-    Lemma list_app_neq_list : forall (xs : list A) x, xs <> xs ++ [x].
+    Lemma list_app_neq_list : forall (l : list A) a, l <> l ++ [a].
       intros.
-      induction xs; intro Hbad.
-      - inversion Hbad.
-      - simpl in Hbad.
-        inversion Hbad.
-        contradiction.
+      induction l; intro Hbad; inversion Hbad.  
+      contradiction.
     Qed.
 
     Lemma rev_destruct : forall (l : list A), l = [] \/ (exists init a, l = init ++ [a]).
@@ -266,7 +257,7 @@ Module Type BaseTheories (B : Basic).
       * apply f_equal. eauto.
     Qed.
 
-    Lemma prefix_split : forall (p p' : list A), PropPrefix p p' -> exists p'', p' = p ++ p'' /\ [] <> p''.
+    Lemma prefix_split : forall (l1 l2 : list A), PropPrefix l1 l2 -> exists l', l2 = l1 ++ l' /\ [] <> l'.
       intros.
       destruct H.
       induction H.
@@ -298,8 +289,8 @@ Module Type BaseTheories (B : Basic).
           apply app_prefix.
     Qed.  
 
-    Lemma prefix_first_eq_last_eq : forall (p : list A) a b, Prefix (p ++ [a]) (p ++ [b]) -> a = b.
-      intros; induction p; inversion H; auto.
+    Lemma prefix_first_eq_last_eq : forall (l : list A) a b, Prefix (l ++ [a]) (l ++ [b]) -> a = b.
+      intros; induction l; inversion H; auto.
     Qed.
 
     Lemma prop_pref_lt_len: forall (l l' : list A), PropPrefix l l' -> length l < length l'.
@@ -315,21 +306,21 @@ Module Type BaseTheories (B : Basic).
     Qed.
 
     Lemma prefix_app_last :
-      forall (l1 l2 : list A) (x : A),
-        Prefix l1 (l2 ++ [x]) ->
-        l1 = (l2 ++ [x]) \/ Prefix l1 l2.
+      forall (l1 l2 : list A) (a : A),
+        Prefix l1 (l2 ++ [a]) ->
+        l1 = (l2 ++ [a]) \/ Prefix l1 l2.
     Proof.
       intros ? ?.
       generalize dependent l1.
       induction l2; intros ? ? Hpref; inversion Hpref; auto.
       - inversion H1; subst. auto.
-      - specialize (IHl2 lst0 x H1).
+      - specialize (IHl2 _ _ H1).
         destruct IHl2; [subst lst0|]; auto.
     Qed.
 
     Lemma prop_prefix_app_implies_prefix :
-      forall (l1 l2 : list A) (x : A),
-        PropPrefix l1 (l2 ++ [x]) ->
+      forall (l1 l2 : list A) (a : A),
+        PropPrefix l1 (l2 ++ [a]) ->
         Prefix l1 l2.
     Proof.
       intros ? ? ? Hppref.
