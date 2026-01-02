@@ -3,7 +3,7 @@ Require Import SecDef SecPol Trace.
 Require Import BaseTheory TraceTheories DetTheories.
 Require Import SecTheory.
 
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence Arith.PeanoNat Lia. 
+From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence Arith.PeanoNat Lia. 
 Import ListNotations.
 
 Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD) (ST : SecurityTheory B LD BT TD SP SD TT)  (DT : DetTheories B LD TD Det TT).
@@ -57,8 +57,8 @@ Module Type PINI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         destruct H1, H2.
         inversion H1. inversion H2.
         destruct cs1 as [c' m'].
-        det_subst.
         specialize (IHp1 p2 c' m' H).
+        det_subst.
         destruct (sil_dec a) eqn:Heq.
         + destruct (IHp1 H0); can_step_auto.
         + assert (PropPrefix (erase p1) (erase p2)). {

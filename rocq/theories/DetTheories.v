@@ -1,7 +1,7 @@
 Require Import Basic Lang Determinism Trace.
 Require Import BaseTheory.
 Require Import TraceTheories.
-From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams Setoid Classes.Morphisms.
+From Stdlib Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams Setoid Classes.Morphisms.
 Import ListNotations.
 
 Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : DeterminismDef LD) (TT : TraceTheories B LD TD).
@@ -76,9 +76,9 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       repeat lazymatch goal with
         | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
         | [H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
-          => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+          =>  specialize (Det cs); assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using Det ; subst ; clear H1
         | [H0 : ?cs -->[?a0] ?cs0, H1 : steps_to_combined ?cs ?a1 ?cs1 |- _]
-          => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+          =>  specialize (Det cs); assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using Det ; subst ; clear H1
       end.
 
     Lemma evt_prefix_prod_both : forall lst st0, EvtPrefix lst st0 -> forall c s st1, Produces c s st0 -> Produces c s st1 -> EvtPrefix lst st1.
@@ -198,9 +198,9 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
   Ltac det_subst := repeat lazymatch goal with
     | [H : (_, _) = (_, _) |- _] => injection H ; intros ; subst ; clear H
     | [Det : (det_rel steps_to_combined), H0 : ?cs -->[?a0] ?cs0, H1 : ?cs -->[?a1] ?cs1 |- _]
-      => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+      => specialize (Det cs); assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using Det ; subst ; clear H1
     | [Det : (det_rel steps_to_combined), H0 : ?cs -->[?a0] ?cs0, H1 : steps_to_combined ?cs ?a1 ?cs1 |- _]
-      => assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using (Det cs) ; subst ; clear H1
+      => specialize (Det cs); assert (cs1 = cs0 /\ a1 = a0) as [? ?] by eauto using Det ; subst ; clear H1
   end.
 
   Ltac det_pfx_prod c m p name := lazymatch goal with

@@ -1,6 +1,6 @@
 Require Import Basic Lang.
 
-From Coq Require Import List Basics Equality Relations Ensembles Lists.Streams Arith.PeanoNat.
+From Stdlib Require Import List Basics Equality Relations Ensembles Streams.Streams Arith.PeanoNat.
 
 Import ListNotations.
 

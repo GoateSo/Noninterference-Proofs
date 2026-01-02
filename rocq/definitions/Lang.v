@@ -1,4 +1,4 @@
-From Coq Require Import Basics Equality List.
+From Stdlib Require Import Basics Equality List.
 Import ListNotations.
 
 (* The typeclass abstracting over a language's small-step semantics. *)

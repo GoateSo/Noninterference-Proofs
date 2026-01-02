@@ -1,7 +1,7 @@
 Require Import Basic Lang Determinism.
 Require Import SecPol SecDef Trace.
 Require Import BaseTheory TraceTheories.
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Setoid Classes.Morphisms.
+From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses Setoid Classes.Morphisms.
 Import ListNotations.
 
 Module Type SecurityTheory (B : Basic) (LD : LangDefs) (BT : BaseTheories B) (TD : TraceDefs B LD) (SP : SecurityPol LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD).

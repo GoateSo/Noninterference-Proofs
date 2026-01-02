@@ -1,7 +1,7 @@
 Require Import Lang.
 Require Import Trace.
 
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
+From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses.
 Import ListNotations.
 
 Class DecideIn {A : Type} (S : Ensemble A) := {

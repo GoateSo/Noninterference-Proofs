@@ -1,7 +1,7 @@
 Require Import Basic Lang Trace.
 Require Import SecPol.
 
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
+From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses.
 Import ListNotations.
 
 Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD).

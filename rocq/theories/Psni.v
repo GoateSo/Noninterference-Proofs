@@ -3,7 +3,7 @@ Require Import SecDef SecPol Trace.
 Require Import BaseTheory TraceTheories DetTheories.
 Require Import SecTheory.
 
-From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
+From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
 Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD) (ST : SecurityTheory B LD BT TD SP SD TT)  (DT : DetTheories B LD TD Det TT).
@@ -70,7 +70,8 @@ Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDe
         exists (c, m2); auto.
       + inversion H0; subst.
         unfold deq_evt_lst.
-        assert (EvtPrefix p1 s1) by eauto using (app_prefix p1 [x]), lst_prefix_stream_prefix.
+        pose proof app_prefix p1 [x] as app_prefix_p1_x.
+        assert (EvtPrefix p1 s1) by eauto using app_prefix_p1_x, lst_prefix_stream_prefix.
         apply (LeTrace_intro m1) in H1.
         apply IHp1 in H1.
         destruct H1 as [p2 [Hp2Prod Hp2Deq]].

@@ -1,5 +1,5 @@
 Require Import Basic.
-From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles.
+From Stdlib Require Import Equality Relations RelationClasses List Compare Sets.Ensembles.
 Import ListNotations.
 
 Module Type BaseTheories (B : Basic).
