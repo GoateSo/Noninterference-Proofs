@@ -1,5 +1,7 @@
 Require Import Basic Lang Trace.
-From Stdlib Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams.Streams.
+From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams.Streams.
+(* breaking change from coq 8.18 -> rocq 9.1.0 transition *)
+(* From Coq Require Import Lists.Streams *) 
 Import ListNotations.
 
 Module Type TraceTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD).

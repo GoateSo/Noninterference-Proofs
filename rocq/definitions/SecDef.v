@@ -1,7 +1,7 @@
 Require Import Basic Lang Trace.
 Require Import SecPol.
 
-From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses.
+From Coq Require Import Basics Equality List Ensembles Relations RelationClasses.
 Import ListNotations.
 
 Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD).
@@ -14,7 +14,6 @@ Module Type SecurityDefs (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (SP :
   Defined.
 
   (* indistinguishability equivalence and inequality relations *)
-  (* TODO: add D as the paramater of deq and dle relations? *)
   Class DEquivalence := {
     D : Ensemble Label;
     sil : Event -> Prop;

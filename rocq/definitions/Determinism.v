@@ -1,4 +1,5 @@
-Require Import Basic Lang.
+Require Import Lang.
+
 Module Type DeterminismDef (LD : LangDefs).
     Import LD LangNotations.
     Section Determinism.

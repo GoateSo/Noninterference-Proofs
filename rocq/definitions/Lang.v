@@ -1,4 +1,4 @@
-From Stdlib Require Import Basics Equality List.
+From Coq Require Import Basics Equality List.
 Import ListNotations.
 
 (* The typeclass abstracting over a language's small-step semantics. *)
@@ -24,7 +24,6 @@ Module Type LangDefs.
   Section Production.
     (* notation for single step progression *)
     Definition steps_to_combined cs1 a cs2 := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)).
-    Hint Unfold steps_to_combined : core.
     
     Notation "cs1 '-->[' a ']' cs2" := (steps_to (fst cs1) (snd cs1) a (fst cs2) (snd cs2)) (at level 50, no associativity).
 

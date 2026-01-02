@@ -3,7 +3,7 @@ Require Import SecDef SecPol Trace.
 Require Import BaseTheory TraceTheories DetTheories.
 Require Import SecTheory.
 
-From Stdlib Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
+From Coq Require Import Basics Equality List Ensembles Relations RelationClasses Classes.Equivalence.
 Import ListNotations.
 
 Module Type PSNI (B : Basic) (BT : BaseTheories B) (LD : LangDefs) (TD : TraceDefs B LD) (SP : SecurityPol LD) (Det : DeterminismDef LD) (SD : SecurityDefs B LD TD SP) (TT : TraceTheories B LD TD) (ST : SecurityTheory B LD BT TD SP SD TT)  (DT : DetTheories B LD TD Det TT).

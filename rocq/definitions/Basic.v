@@ -1,4 +1,4 @@
-From Stdlib Require Import Equality Relations RelationClasses List.
+From Coq Require Import Equality Relations RelationClasses List.
 
 Import ListNotations.
 

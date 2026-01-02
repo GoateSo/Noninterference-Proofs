@@ -1,6 +1,6 @@
 Require Import Basic Lang.
 
-From Stdlib Require Import List Basics Equality Relations Ensembles Streams.Streams Arith.PeanoNat.
+From Coq Require Import List Basics Equality Relations Ensembles Arith.PeanoNat.
 
 Import ListNotations.
 
@@ -10,7 +10,7 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
 
   Section Definitions.
     CoInductive EvtStream :=
-      | ConsEvt (a : Event) (st : EvtStream) : EvtStream
+      | ConsEvt (e : Event) (st : EvtStream) : EvtStream
       | NoProgress : EvtStream. (* termination or stuck *)
 
     (* decomposer for evt streams *)
@@ -33,12 +33,12 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
 
     Inductive EvtPrefix : list Event -> EvtStream -> Prop :=
       | EvtPrefix_empty : forall st, EvtPrefix [] st
-      | EvtPrefix_some : forall a lst st, EvtPrefix lst st -> EvtPrefix (a :: lst) (ConsEvt a st).
+      | EvtPrefix_some : forall e lst st, EvtPrefix lst st -> EvtPrefix (e :: lst) (ConsEvt e st).
 
     Fixpoint prepend (lst : list Event) (st : EvtStream) : EvtStream :=
       match lst with
         | [] => st
-        | a :: rst => ConsEvt a (prepend rst st)
+        | e :: rst => ConsEvt e (prepend rst st)
       end.
 
     Definition Trace : Type := Store * EvtStream.
@@ -59,8 +59,8 @@ Module Type TraceDefs (B : Basic) (LD : LangDefs).
     Definition Hyperproperty : Type := Ensemble Property.
 
     CoInductive Produces : Cmd -> Store -> EvtStream -> Prop :=
-      | Produces_step : forall c s a c' s' st, (c, s) -->[a] (c', s')
-        -> Produces c' s' st -> Produces c s (ConsEvt a st)
+      | Produces_step : forall c s e c' s' st, (c, s) -->[e] (c', s')
+        -> Produces c' s' st -> Produces c s (ConsEvt e st)
       | No_production : forall c s, no_step c s -> Produces c s NoProgress.
 
     Definition behavior (c : Cmd) : Property :=

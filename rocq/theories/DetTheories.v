@@ -1,7 +1,7 @@
 Require Import Basic Lang Determinism Trace.
 Require Import BaseTheory.
 Require Import TraceTheories.
-From Stdlib Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams Setoid Classes.Morphisms.
+From Coq Require Import Equality Relations RelationClasses List Compare Sets.Ensembles Streams Setoid Classes.Morphisms.
 Import ListNotations.
 
 Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : DeterminismDef LD) (TT : TraceTheories B LD TD).
@@ -60,7 +60,7 @@ Module Type DetTheories (B : Basic) (LD : LangDefs) (TD : TraceDefs B LD) (DD : 
       cofix CH. 
       intros.
       inversion H; inversion H0; subst.
-      - destruct (Det (c, m) (c', s') (c'0, s'0) a a0); try assumption.
+      - destruct (Det (c, m) (c', s') (c'0, s'0) e e0); try assumption.
         + constructor.
           * assumption.
           * rewrite pair_equal_spec in H3; destruct H3; subst;
