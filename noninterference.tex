@@ -108,6 +108,13 @@
   \item \textbf{Knowledge based definition of Lfp}: \\
         For an arbitrary program $c$:
         \[c \in \klfp_\DD \defiff \forall p\in \fintrace, m \in \Store, \alpha \in \EE. \neg Sil(\alpha) \wedge \ftprod{c}{m}{p\cdot\alpha} \implies k(c,m,p,\DD) = k_\rightarrow (c,m,p,\DD)\]
+  \item \textbf{Determinism}: \\
+        If a program $c$ is deterministic, then it follows that:
+        \[
+          \conf{c}{m} \xrightarrow{\alpha_1} \conf{c_1}{m_1} \wedge
+          \conf{c}{m} \xrightarrow{\alpha_2} \conf{c_2}{m_2} \implies
+          c_1 = c_2 \wedge m_1 = m_2 \wedge \alpha_1 = \alpha_2
+        \]
 \end{enumerate}
 % \newpage
 \section*{Notable Facts (NF)}
@@ -115,16 +122,8 @@
 % for determinism and erased list formulation, I think that might make more sense in definitions, but its being placed here due to page space contraints :/
 
 \begin{enumerate}
-  \item \textbf{Determinism}: \\
-        If a program $c$ is deterministic, thn it follows that:
-        \[
-          \conf{c}{m} \xrightarrow{\alpha_1} \conf{c_1}{m_1} \wedge
-          \conf{c}{m} \xrightarrow{\alpha_2} \conf{c_2}{m_2} \implies
-          c_1 = c_2 \wedge m_1 = m_2 \wedge \alpha_1 = \alpha_2
-        \]
-
   \item \textbf{Trace Prefix Maximization}: \\
-        Given program $c$ as well as arbitrary $p \in \fintrace, m \in \Store$. \[
+        All finite trace prefixes produced by an initial configuration can be extended to some possibly infinite trace produced by that configuration, or more formally: given program $c$ as well as arbitrary $p \in \fintrace, m \in \Store$. \[
           \ftprod{c}{m}{p} \implies
           \exists st \in \trace.\,p\leq st \wedge \tprod{c}{m}{st}
         \]
@@ -259,14 +258,14 @@
           \textbf{Proof:} Consider arbitrary $m \in \Store, p \in \fintrace, \alpha \in \EE$ such that
           $\ftprod{c}{m}{p\cdot\alpha}$ (from premises).
 
-          From (NF.2), it follows that $\exists st \in \trace.\,p\cdot\alpha\leq st$ and
+          From (NF.1), it follows that $\exists st \in \trace.\,p\cdot\alpha\leq st$ and
           $\tprod{c}{m}{st}$.
 
           Additionally, consider arbitrary $m' \in \Store$ where $m \indistinctD m'$ and
           a particular $p' \in \fintrace, \alpha' \in \EE$ such that $p \indistinctD p'$,
           $\ftprod{c'}{m'}{p'}$ and $\neg Sil_{\DD}(\alpha')$.
 
-          Also from (NF.2), it follows that $\exists st' \in \trace.\,p'\leq st'$ and
+          Also from (NF.1), it follows that $\exists st' \in \trace.\,p'\leq st'$ and
           $\tprod{c}{m'}{st'}$.
 
           Since $\behav{c} \in \hpini_{\DD}$ and $m \indistinctD m'$, it follows that: \[
@@ -274,7 +273,7 @@
           \]
 
           then taking $p_a = p \cdot \alpha$ and $p_b = p'$ yields that $\alpha =
-            \alpha'$ from case analysis and using (NF.3) with list properties:
+            \alpha'$ from case analysis and using (NF.2) with list properties:
 
           \begin{minipage}{.4\textwidth}
             \centering
@@ -407,7 +406,7 @@
 
         Without loss of generality, assume $\len{\erase{p_1}} \leq \len{\erase{p_2}}$.
         From lemma 4.2, it then follows that $\erase{p_1} \leq \erase{p_2} \implies p_1
-          \leq_\DD p_2$ (from (NF.3)), as desired.
+          \leq_\DD p_2$ (from (NF.2)), as desired.
 \end{enumerate}
 
 \newpage
@@ -425,7 +424,7 @@
         \begin{addmargin}[1em]{2em}
           \textbf{Proof:} let $p \in \fintrace, m \in \Store, \alpha \in \EE$ s.t. $\neg Sil(\alpha)$, $\ftprod{c}{m}{p\cdot\alpha}$. Then, also let $p' \in \fintrace$ and $m' \indistinctD m \in \Store$ s.t. $p' \indistinctD p$ and $\ftprod{c}{m'}{p'}$.
 
-          From (NF.2), finite traces $p \cdot \alpha$ and $p'$ can be maximized: into
+          From (NF.1), finite traces $p \cdot \alpha$ and $p'$ can be maximized: into
           some $st_1, st_2 \in \trace$ where $p\cdot\alpha \leq st_2$ and $p' \leq st_1$
 
           Since $p' \indistinctD p$ and $\neg Sil(\alpha)$, it follows that $p' <_\DD p
@@ -485,7 +484,7 @@
 
         Applying Lemma 6.1 then shows $\exists p^*, \alpha'$ where $p^* \indistinctD
           p_2' \cdot \alpha$, $\neg Sil(\alpha)$, and $\ftprod{c}{m_1}{p^*}$. From there,
-        maximalization (NF.2) and determinism show that $p^* \leq st_1$.
+        maximization (NF.1) and determinism show that $p^* \leq st_1$.
 
         Then $p^* \indistinctD p_2' \cdot \alpha \indistinctD p_1 \cdot \alpha$, and as
         $\neg Sil(\alpha)$: $p^* >_\DD p_1$, combining with the previous result shows
